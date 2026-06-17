@@ -9,10 +9,11 @@ description: 推进里程碑中的下一个任务
 当前里程碑全部完成后，更新 `CLAUDE.md` 标记 ✅ 并指向下一个里程碑（或确认进入「后续待定」）。
 遇到连续 3 次失败或需要人工决策的问题，标记 `[!]` 并停下通知用户。
 
-## 本项目测试方式（无 Unity 运行时 MCP）
-按优先级选择：
-1. **构建验证**（最低要求，必须过）：Unity 命令行 `-batchmode -nographics` 编译，确认无报错。
+## 本项目测试方式
+按优先级选择（可组合；每项 `[x]` 至少要有「MCP 验证」或「构建验证」之一的记录）：
+1. **MCP 验证**（首选，需 Unity 编辑器打开 + MCP 面板 session active）：经 `UnityMCP`（配置见 `docs/config/MCP.md`）直接读运行时状态——`read_console` 查编译报错、`find_gameobjects`/`manage_scene` 查场景对象、`run_tests` 跑测试、`manage_packages` 装包查包。
+2. **构建验证**（最低要求，可无人值守）：Unity 命令行 `-batchmode -nographics` 编译，确认无报错。
    `Unity -batchmode -nographics -quit -projectPath <项目路径> -logFile -`
-2. **手动验证**：在 Unity Editor 中 Play，检查目标行为（移动、跳跃、UI 绑定、腐败重置等）。
-3. **编辑器内试玩**：M2 起的核心循环需实际试玩，确认手感与乐趣。
-组合使用，例如「构建验证 + 手动验证」。每项 `[x]` 至少要有「构建验证」记录。
+3. **手动验证**：在 Unity Editor 中 Play，检查目标行为（移动、跳跃、UI 绑定、腐败重置等）。
+4. **编辑器内试玩**：M2 起的核心循环需实际试玩，确认手感与乐趣。
+组合使用，例如「MCP 验证 + 手动验证」。
