@@ -1,6 +1,6 @@
 # 项目配置与上手指南 (SETUP)
 
-> cyber_sousa · 键位重构 (Key Remap) · 金海豚游戏开发大赛
+> DontPushTheButton · 键位重构 (Key Remap) · 金海豚游戏开发大赛
 > 最后更新：2026-06-17
 
 本文档面向**所有队友**：从零搭环境、首次新建工程、到 clone 接手开发。读完即可在本地跑起来。
@@ -19,13 +19,13 @@
 | IDE | VS Code (C# Dev Kit) 或 JetBrains Rider | Rider 对 Unity 支持最好 |
 | Git | 任意现代版本 | |
 | GitHub CLI (`gh`) | 可选，简化推送/PR | 见第 5 节 |
-| 远程仓库 | https://github.com/awaken-psy/cyber_sousa | private，需邀请协作者 |
+| 远程仓库 | https://github.com/awaken-psy/DontPushTheButton | private，需邀请协作者 |
 
 ### 版本锁定（重要）
 - Unity 具体小版本以工程根目录 `ProjectSettings/ProjectVersion.txt` 为准（M1.1 建立工程后生成）。
 - **所有队友必须安装与之完全一致的小版本**，否则 Unity 会警告 "different version" 并可能改动 Library。
 - 包版本以 `Packages/manifest.json` 为准，**不要在本地手动升级包**；要升包走 PR。
-- > 待填（M1.1 完成后）：在此写明具体版本号，例如 `2022.3.20f1`。
+- **当前锁定**：Unity `2022.3.62f3`（revision 96770f904ca7）+ URP `14.0.12`（`com.unity.render-pipelines.universal`）。所有成员必须安装 `2022.3.62f3`。
 
 ---
 
@@ -41,46 +41,41 @@
 
 ---
 
-## 3. 首次新建项目（仅负责人执行一次，M1.1）
+## 3. 首次新建项目（已完成；保留步骤供重建/参考）
 
-> 仅第一次需要。其他队友跳到第 4 节「clone 接手」。
+> ✅ 本仓库的 Unity 工程已于 2026-06-17 用 **Universal 3D (URP)** 模板建好，工程文件在仓库内。队友**无需重建**，直接第 4 节「clone 接手」即可。本节仅留作重建/参考。
 
-仓库根目录已 git 初始化且非空，Unity Hub 不允许选已存在目录作新工程名。两种方式选一：
-
-### 方式 A（推荐）：Hub 建临时工程 → 搬运
-1. Unity Hub → New Project → 选 **3D (URP)** 模板。
-2. Project name 随意（如 `cyber_sousa_tmp`），Location 选仓库**之外**的临时目录。
-3. 创建并首次打开，确认 URP 正常后关闭。
-4. 把工程内容搬进仓库根目录（保留现有 `CLAUDE.md` / `docs/` / `.claude/` / `.git`）。
-   需要搬入：`Assets/`、`Packages/`、`ProjectSettings/`（含 `ProjectVersion.txt`）；`UserSettings/` 可选。
-5. 用 Hub → Add 打开仓库目录工程，确认能 Play。
-6. git 提交（见第 6 节），并把版本号回填到第 1 节。
-
-### 方式 B：命令行 createProject
-若已知 Unity 可执行路径（如 `.../Unity/Hub/Editor/2022.3.xf1/Editor/Unity`）：
-```
-Unity -batchmode -nographics -createProject <仓库根目录> -quit -logFile -
-```
-注意：命令行默认创建 **3D 核心**模板，URP 包需随后在 Package Manager 手动安装 `com.unity.render-pipelines.universal` 并配置。方式 A 更省事。
+### 用 Unity Hub 的 Universal 3D 模板（实际采用的方式）
+1. Unity Hub → New Project → 模板选 **Universal 3D**（= 3D URP；**不要**选 "3D (Built-In)"）。
+   - 该模板右上角如有下载图标，点选后 Hub 会联网下载模板（约几十秒）。
+2. Project name 随意（如 `tmp_project`），Location 选仓库**之外**的临时目录（仓库根目录已非空，Hub 不允许直接在此新建）。
+3. Version 选 `2022.3.62f3`，Create project。
+4. 首次打开确认 URP 正常（`Assets/Settings/` 下有 `URP-*.asset`），关闭。
+5. 把工程内容搬进仓库根目录（保留现有 `CLAUDE.md` / `docs/` / `.claude/` / `.git`）：
+   - **搬入**：`Assets/`、`Packages/`、`ProjectSettings/`（含 `ProjectVersion.txt`）。
+   - **不要搬**：`Library/`、`Logs/`、`Obj/`、`Temp/`、`UserSettings/`、`*.sln`、`*.csproj`（已在 `.gitignore`）。
+6. Unity Hub → Add → 选仓库目录，确认能打开并 Play。
+7. git 提交（见第 5 节）。
 
 ### 工程建立后的必要配置
 - Editor → Project Settings → **Editor**：
   - Version Control → `Visible Meta Files`
   - Asset Serialization → `Force Text`
-- Package Manager 安装 **Input System**；Player → Active Input Handling 选 `Input System Package (New)` 或 `Both`。
-- 把具体版本号回填到本文档第 1 节「版本锁定」。
+- **补装 Input System**：Universal 3D 模板默认用旧 Input Manager，本工程要用新版 Input System。
+  - Package Manager 安装 **Input System**；安装后 Player → Active Input Handling 选 `Input System Package (New)` 或 `Both`（M1.3 任务）。
+- 版本号已回填本文档第 1 节「版本锁定」。
 
 ---
 
 ## 4. 队友接手：clone & run
 
 ```bash
-git clone https://github.com/awaken-psy/cyber_sousa.git
-cd cyber_sousa
+git clone https://github.com/awaken-psy/DontPushTheButton.git
+cd DontPushTheButton
 ```
 
 1. **安装 Unity**：Unity Hub → Installs → Install Editor → 选 `ProjectSettings/ProjectVersion.txt` 写明的 2022.3 LTS 小版本。
-2. **打开工程**：Hub → Add → Add project from disk → 选 `cyber_sousa` 根目录。
+2. **打开工程**：Hub → Add → Add project from disk → 选 `DontPushTheButton` 根目录。
 3. **首次打开**会自动导入并生成 `Library/`（几分钟），等进度条走完。
 4. 确认 Console 无红色报错 → 按 ▶ Play 能跑（M1 完成后即可在白盒房间走/跳）。
 5. （可选）配置推送凭证：`gh auth login` 或 `gh auth setup-git`。
@@ -122,7 +117,7 @@ git push -u origin feature/xxx
 ## 6. 项目结构
 
 ```
-cyber_sousa/
+DontPushTheButton/
 ├── CLAUDE.md              # 项目总纲：技术栈 / 约定 / 里程碑路线图
 ├── README.md              # （建议补充）项目简介与快速入口
 ├── docs/
