@@ -19,8 +19,6 @@
         "**/*.ico": true,
         "**/*.jpg": true,
         "**/*.jpeg": true,
-        "**/*.png": true,
-        "docs/**/*.png": false,
         "**/*.psd": true,
         "**/*.tga": true,
         "**/*.tif": true,
