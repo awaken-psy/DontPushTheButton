@@ -2,7 +2,7 @@
 description: 推进里程碑中的下一个任务
 ---
 读取 `CLAUDE.md` 中的里程碑路线图，确认当前里程碑编号 N。
-读取 `milestones/M{N}.md` 的任务清单。
+读取 `docs/milestones/M{N}.md` 的任务清单。
 找到第一个 `[ ]` 未完成项，执行它。
 执行完毕后自测并记录（Unity 项目验证手段见下）。
 在 milestones 文件中记录：状态 `[x]`、测试方式、测试结果、遗留问题（如有）。

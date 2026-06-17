@@ -3,7 +3,7 @@ description: 里程碑工作流的通用规则，所有里程碑共享
 ---
 # 里程碑通用规则
 
-- 每完成一项任务，立即更新对应的 `milestones/M{N}.md`，不要等批量更新。
+- 每完成一项任务，立即更新对应的 `docs/milestones/M{N}.md`，不要等批量更新。
 - 每项任务完成后必须自测，并在里程碑文件中记录测试方式和结果，**不允许无测试记录的 `[x]`**。
 - 遵守 `CLAUDE.md` 中定义的跨里程碑约束（URP / 新版 Input System / 数值集中配置 / 无 Unity MCP 等）。
 - 当里程碑全部完成时，自动更新 `CLAUDE.md` 路线图并告知用户。
@@ -14,5 +14,5 @@ description: 里程碑工作流的通用规则，所有里程碑共享
 
 ## 本项目补充
 - **无 Unity 运行时 MCP**：现有 MCP 工具为 Godot 专用，对本项目无效。验证用 Unity 命令行 `-batchmode` 编译 + 人工编辑器试玩（见 `.claude/commands/next.md`）。
-- **GDD 是设计单一事实来源**：机制/数值调整先改 `GDD_键位重构_v0.3.md`，再落到代码与 ScriptableObject。
+- **GDD 是设计单一事实来源**：机制/数值调整先改 `docs/GDD_键位重构_v0.3.md`，再落到代码与 ScriptableObject。
 - **git 协作**：2-3 人，`feature/xxx` 分支 + PR；`main` 保持可玩；提交信息用中文。
