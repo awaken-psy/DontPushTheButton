@@ -33,4 +33,4 @@
 - 所有新系统先「能跑」（构建验证 + 编辑器试玩通过）才可标记完成，不允许无测试记录的 `[x]`
 - 数值全部走 ScriptableObject 集中配置，便于 GDD 调优
 - GDD 改动需同步回顾本文件的技术栈/约束是否要调整
-- 本项目无 Unity 运行时 MCP（现有 MCP 为 Godot 专用），验证手段为 Unity 命令行 `-batchmode` 编译 + 人工编辑器试玩
+- **验证手段**：已接入 **MCP for Unity**（CoplayDev/unity-mcp，开源；区别于商业 Coplay MCP）。Unity 编辑器交互式打开 + MCP 面板 session active 时，Claude 经 `UnityMCP`（`http://127.0.0.1:9090/mcp`，local scope 不进 git）可直接操作 Unity：`read_console`/`find_gameobjects`/`manage_scene`/`manage_packages`/`run_tests` 等。无头编译验证仍用 Unity `-batchmode`。**两者互补**：MCP 需 Unity 开着（端口 9090，因 8080 被 SRS 占），batchmode 可无人值守
