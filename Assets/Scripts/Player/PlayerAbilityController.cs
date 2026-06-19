@@ -2,96 +2,172 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using DontPushTheButton.Abilities;
+using DontPushTheButton.Binding;
 using DontPushTheButton.Config;
-using DontPushTheButton.Input;
+using DontPushTheButton.Corruption;
 
 namespace DontPushTheButton.Player
 {
     /// <summary>
-    /// 能力驱动的角色物理权威（M2.1 重构，替代 M1 的 PlayerMover）。
-    /// 职责：收集同对象上所有 Ability 的运动意图 → 应用重力 → 合并水平+垂直成
-    /// **单次 CharacterController.Move**（保证 isGrounded 时机正确，规避 M1.4 双 Move 坑）。
-    /// 能力只产生意图（水平位移 / 起跳速度 / 推箱作用），物理 Move 只在此处发生。
+    /// 能力驱动的角色物理权威 + 输入权威（M2.5：按 LoadoutConfig 轮询 Keyboard 驱动能力 + 超载触发腐败）。
+    /// 每帧轮询 LoadoutConfig 的槽位：移动方向读 isPressed，能力读 wasPressedThisFrame；
+    /// 超载键按下 → CorruptionTracker.AddOverloadPress + 标记该次触发超载强化。
+    /// 物理 Move 只在此处合并单次（保证 isGrounded 时机，规避双 Move 坑）。
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
-    [RequireComponent(typeof(PlayerControls))]
     public class PlayerAbilityController : MonoBehaviour, IAbilityContext
     {
         [Header("引用")]
-        [Tooltip("角色运动调参（移动/跳跃/重力/转向）")]
         [SerializeField] private MovementTuning _tuning;
-        [Tooltip("水平移动方向所相对的相机；留空则用 Camera.main")]
         [SerializeField] private Camera _relativeCamera;
+        [Tooltip("关卡配置（M2.3）；Start 构建默认 LoadoutConfig。M2.8 改从 LoadoutUIController 取玩家配置")]
+        [SerializeField] private LevelConfigSO _levelConfig;
+        [Tooltip("腐败追踪（M2.5）；留空则自动 GetComponent")]
+        [SerializeField] private CorruptionTracker _corruption;
 
         private CharacterController _controller;
-        private PlayerControls _controls;
         private readonly List<AbilityBase> _abilities = new List<AbilityBase>();
+        private float _verticalVelocity;
+        private Vector3 _horizontalThisFrame;
+        private LoadoutConfig _loadout;
 
-        private float _verticalVelocity;      // Y 轴速度（跳跃/重力累积）
-        private Vector3 _horizontalThisFrame; // 本帧各能力累加的水平位移意图
+        // 本帧输入状态（轮询 LoadoutConfig 填充）
+        private Vector2 _moveInput;
+        private readonly HashSet<AbilityKind> _pressedAbilities = new HashSet<AbilityKind>();
+        private readonly HashSet<AbilityKind> _overloadAbilities = new HashSet<AbilityKind>();
 
-        // ---- 暴露给能力的 API ----
+        // ---- IAbilityContext ----
         public bool IsGrounded => _controller.isGrounded;
-        public CharacterController Controller => _controller;
         public MovementTuning Tuning => _tuning;
         public Transform Body => transform;
         public Camera RelativeCamera => _relativeCamera;
-
-        /// <summary>
-        /// 能力→输入动作的集中映射。
-        /// M2.5 运行时动态重绑时，把这里改成查绑定表（LevelConfig → 槽位 → 按键）。
-        /// </summary>
-        public InputAction GetAction(AbilityKind kind) => kind switch
-        {
-            AbilityKind.Move => _controls.MoveAction,
-            AbilityKind.Jump => _controls.JumpAction,
-            AbilityKind.Push => _controls.PushAction,
-            _ => null,
-        };
-
-        /// <summary>能力提交本帧水平位移（世界空间，已含 deltaTime）。</summary>
-        public void AddHorizontal(Vector3 worldDisp) => _horizontalThisFrame += worldDisp;
-
-        /// <summary>能力设定垂直速度（JumpAbility 起跳用）。</summary>
+        public Vector2 MoveInput => _moveInput;
+        public bool WasPressedThisFrame(AbilityKind k) => _pressedAbilities.Contains(k);
+        public bool IsOverloadTrigger(AbilityKind k) => _overloadAbilities.Contains(k);
+        public CharacterController Controller => _controller;
+        public LoadoutConfig Loadout => _loadout;
+        public void AddHorizontal(Vector3 d) => _horizontalThisFrame += d;
         public void SetVerticalVelocity(float v) => _verticalVelocity = v;
+
+        // KeyName（LoadoutConfig）→ InputSystem Key 映射
+        private static readonly Dictionary<string, Key> KeyMap = new Dictionary<string, Key>
+        {
+            { "W", Key.W }, { "A", Key.A }, { "S", Key.S }, { "D", Key.D },
+            { "Space", Key.Space }, { "E", Key.E }, { "Q", Key.Q },
+        };
+        private static readonly Dictionary<MoveDirection, Vector2> DirVec = new Dictionary<MoveDirection, Vector2>
+        {
+            { MoveDirection.Up, Vector2.up }, { MoveDirection.Down, Vector2.down },
+            { MoveDirection.Left, Vector2.left }, { MoveDirection.Right, Vector2.right },
+        };
 
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
-            _controls = GetComponent<PlayerControls>();
-            GetComponents(_abilities); // 收集同对象上所有能力组件
-            if (_tuning == null) Debug.LogError("[PlayerAbilityController] MovementTuning 未在 Inspector 赋值", this);
+            GetComponents(_abilities);
+            if (_tuning == null) Debug.LogError("[PlayerAbilityController] MovementTuning 未赋值", this);
             if (_relativeCamera == null) _relativeCamera = Camera.main;
+            if (_corruption == null) _corruption = GetComponent<CorruptionTracker>();
+        }
+
+        private void Start()
+        {
+            // 默认 LoadoutConfig（关2典型：WASD 移动 + 超载键绑首个能力）；M2.8 改为 SetLoadout(玩家配置)
+            if (_levelConfig != null && _loadout == null)
+                _loadout = BuildDefaultLoadout(_levelConfig);
+        }
+
+        /// <summary>M2.8：从配置阶段传入玩家 LoadoutConfig。</summary>
+        public void SetLoadout(LoadoutConfig cfg) => _loadout = cfg;
+
+        /// <summary>默认绑定：WASD→移动方向，其余键按顺序绑能力（超载键优先）。</summary>
+        private static LoadoutConfig BuildDefaultLoadout(LevelConfigSO so)
+        {
+            var cfg = new LoadoutConfig { SlotCount = so.SlotCount };
+            var dirMap = new Dictionary<string, MoveDirection>
+            {
+                { "W", MoveDirection.Up }, { "A", MoveDirection.Left },
+                { "S", MoveDirection.Down }, { "D", MoveDirection.Right },
+            };
+            var abs = new List<AbilityKind>(so.AvailableAbilities);
+            int abIdx = 0;
+            foreach (var k in so.AvailableKeys)
+            {
+                BindingItem? b = null;
+                if (dirMap.TryGetValue(k.KeyName, out var d)) b = BindingItem.Move(d);
+                else if (abIdx < abs.Count) { b = BindingItem.Of(abs[abIdx]); abIdx++; }
+                cfg.Slots.Add(new KeySlot(k.KeyName, k.IsOverload, b));
+            }
+            foreach (var a in abs) cfg.AvailableAbilities.Add(a);
+            return cfg;
         }
 
         private void Update()
         {
             if (_tuning == null) return;
-
-            // 1) 清空本帧水平意图，让持续型能力重新填
             _horizontalThisFrame = Vector3.zero;
+            PollInput();
 
-            // 2) 持续型能力 tick（MoveAbility：读 WASD → 写水平位移 + 转向）
+            // 持续型（移动）
             foreach (var a in _abilities)
-                if (a.Trigger == AbilityTrigger.Continuous)
-                    a.TickContinuous(this);
+                if (a.Trigger == AbilityTrigger.Continuous) a.TickContinuous(this);
 
-            // 3) 垂直：读「上一帧 Move 之后」的 isGrounded（必须在本次 Move 之前读，
-            //    拿上一帧合并 Move 后的值）。贴地钳制避免下落速度无限累积。
+            // 垂直：读上一帧 Move 后的 isGrounded，贴地钳制
             bool grounded = _controller.isGrounded;
             if (grounded && _verticalVelocity < 0f)
                 _verticalVelocity = _tuning.GroundStickVelocity;
 
-            // 4) 瞬时型能力 tick（JumpAbility：检查接地+起跳键 → 设垂直速度；
-            //    PushAbility：检查推动键 → 前方射线推箱）
+            // 瞬时型（跳跃/推动 + 超载强化）
             foreach (var a in _abilities)
-                if (a.Trigger == AbilityTrigger.Instant)
-                    a.TickInstant(this);
+                if (a.Trigger == AbilityTrigger.Instant) a.TickInstant(this);
 
-            // 5) 重力 + 合并单次 Move（水平 + 垂直一起）——保证下一帧 isGrounded 正确反映接地。
+            // 重力 + 合并单次 Move
             _verticalVelocity += _tuning.Gravity * Time.deltaTime;
-            Vector3 vertical = Vector3.up * (_verticalVelocity * Time.deltaTime);
-            _controller.Move(_horizontalThisFrame + vertical);
+            _controller.Move(_horizontalThisFrame + Vector3.up * (_verticalVelocity * Time.deltaTime));
+        }
+
+        /// <summary>轮询 LoadoutConfig 各槽位键状态，填充本帧输入状态 + 超载触发腐败。</summary>
+        private void PollInput()
+        {
+            _moveInput = Vector2.zero;
+            _pressedAbilities.Clear();
+            _overloadAbilities.Clear();
+            if (_loadout == null) return;
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            foreach (var slot in _loadout.Slots)
+            {
+                if (!slot.Binding.HasValue) continue;
+                if (!KeyMap.TryGetValue(slot.KeyName, out var key)) continue;
+                var k = kb[key];
+                var item = slot.Binding.Value;
+
+                if (item.Type == BindingItemType.MoveDirection)
+                {
+                    if (k.isPressed)
+                    {
+                        if (DirVec.TryGetValue(item.Direction, out var v)) _moveInput += v;
+                        if (slot.IsOverload) _overloadAbilities.Add(AbilityKind.Move);
+                    }
+                    // 移动绑超载：按下加腐败（高频→腐败快，极限策略）
+                    if (slot.IsOverload && k.wasPressedThisFrame && _corruption != null)
+                        _corruption.AddOverloadPress();
+                }
+                else // Ability
+                {
+                    if (k.wasPressedThisFrame)
+                    {
+                        _pressedAbilities.Add(item.Ability);
+                        if (slot.IsOverload)
+                        {
+                            _overloadAbilities.Add(item.Ability);
+                            if (_corruption != null) _corruption.AddOverloadPress();
+                        }
+                    }
+                }
+            }
+            if (_moveInput.sqrMagnitude > 1f) _moveInput.Normalize();
         }
     }
 }

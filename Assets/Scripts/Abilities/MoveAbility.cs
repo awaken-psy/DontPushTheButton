@@ -3,23 +3,23 @@ using UnityEngine;
 namespace DontPushTheButton.Abilities
 {
     /// <summary>
-    /// 移动能力（持续型，GDD 4.2 唯一持续型能力）。
-    /// 读 WASD → 相对相机水平面产出位移 + 面向移动方向转向。
-    /// 位移以意图提交给 PlayerAbilityController.AddHorizontal（物理 Move 由 controller 统一执行）。
+    /// 移动能力（持续型）。读 ctx.MoveInput → 产出位移 + 转向。
+    /// 超载强化（StatStack）：moveSpeed 倍增（GDD §A 移动加速，高频→腐败快，极限策略）。
     /// </summary>
     public class MoveAbility : AbilityBase
     {
         public override AbilityKind Kind => AbilityKind.Move;
         public override AbilityTrigger Trigger => AbilityTrigger.Continuous;
+        public override OverloadParadigm Overload => OverloadParadigm.StatStack;
 
-        [Tooltip("输入死区：水平输入向量平方长度低于此值视为静止（不移动/不转向）")]
+        [Tooltip("输入死区")]
         [SerializeField] private float _moveInputThreshold = 0.01f;
+        [Tooltip("超载移动速度倍率（H3 写死，M3.5 走 SO）")]
+        [SerializeField] private float _overloadSpeedMultiplier = 1.8f;
 
         public override void TickContinuous(IAbilityContext ctx)
         {
-            var action = ctx.GetAction(Kind);
-            Vector2 stick = action != null ? action.ReadValue<Vector2>() : Vector2.zero;
-
+            Vector2 stick = ctx.MoveInput;
             Camera cam = ctx.RelativeCamera;
             Vector3 fwd = cam ? cam.transform.forward : Vector3.forward;
             Vector3 right = cam ? cam.transform.right : Vector3.right;
@@ -29,13 +29,13 @@ namespace DontPushTheButton.Abilities
             Vector3 moveDir = fwd * stick.y + right * stick.x;
             if (moveDir.sqrMagnitude > 1f) moveDir.Normalize();
 
-            // 水平位移意图交给 controller（含 deltaTime）
-            ctx.AddHorizontal(moveDir * (ctx.Tuning.MoveSpeed * Time.deltaTime));
+            float speed = ctx.Tuning.MoveSpeed;
+            if (ctx.IsOverloadTrigger(AbilityKind.Move)) speed *= _overloadSpeedMultiplier;
+            ctx.AddHorizontal(moveDir * (speed * Time.deltaTime));
 
-            // 面向移动方向
             if (moveDir.sqrMagnitude > _moveInputThreshold)
             {
-                Quaternion target = Quaternion.LookRotation(moveDir, Vector3.up);
+                var target = Quaternion.LookRotation(moveDir, Vector3.up);
                 float turn = ctx.Tuning.TurnSpeed;
                 ctx.Body.rotation = turn <= 0f ? target
                     : Quaternion.RotateTowards(ctx.Body.rotation, target, turn * Time.deltaTime);
