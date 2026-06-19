@@ -22,6 +22,9 @@ namespace DontPushTheButton.Player
         private PlayerControls _controls;
         private float _verticalVelocity; // Y 轴速度（跳跃/重力累积）
 
+        [Tooltip("输入死区：水平输入向量平方长度低于此值视为静止（不移动/不转向）")]
+        [SerializeField] private float _moveInputThreshold = 0.01f;
+
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
@@ -35,44 +38,28 @@ namespace DontPushTheButton.Player
         private void Update()
         {
             if (_tuning == null) return;
-            ApplyHorizontalMove();
-            ApplyVerticalMove();
-        }
 
-        private void ApplyHorizontalMove()
-        {
+            // 1) 水平输入 → 位移向量（相对相机水平面，压平 Y）
             Vector2 stick = _controls.MoveAction != null
                 ? _controls.MoveAction.ReadValue<Vector2>()
                 : Vector2.zero;
 
-            // 相对相机水平面方向（压平 Y）
             Vector3 fwd = _relativeCamera ? _relativeCamera.transform.forward : Vector3.forward;
             Vector3 right = _relativeCamera ? _relativeCamera.transform.right : Vector3.right;
             fwd.y = 0f; fwd.Normalize();
             right.y = 0f; right.Normalize();
 
-            Vector3 move = fwd * stick.y + right * stick.x;
-            if (move.sqrMagnitude > 1f) move.Normalize();
+            Vector3 moveDir = fwd * stick.y + right * stick.x;
+            if (moveDir.sqrMagnitude > 1f) moveDir.Normalize();
+            Vector3 horizontal = moveDir * (_tuning.MoveSpeed * Time.deltaTime);
 
-            _controller.Move(move * (_tuning.MoveSpeed * Time.deltaTime));
-
-            // 面向移动方向
-            if (move.sqrMagnitude > 0.01f)
-            {
-                Quaternion target = Quaternion.LookRotation(move, Vector3.up);
-                transform.rotation = _tuning.TurnSpeed <= 0f
-                    ? target
-                    : Quaternion.RotateTowards(transform.rotation, target, _tuning.TurnSpeed * Time.deltaTime);
-            }
-        }
-
-        private void ApplyVerticalMove()
-        {
+            // 2) 垂直：读「上一帧 Move 之后」的 isGrounded。
+            //    关键：CharacterController.isGrounded 只在含向下分量的 Move 后才为 true；
+            //    所以必须在本次 Move 之前读（拿上一帧合并 Move 后的值），且水平+垂直合并成单次 Move，
+            //    否则纯水平 Move 会把 isGrounded 重置为 false，导致贴地钳制/起跳条件永不满足。
             bool grounded = _controller.isGrounded;
-
-            // 贴地：避免下落速度无限累积
             if (grounded && _verticalVelocity < 0f)
-                _verticalVelocity = -2f;
+                _verticalVelocity = _tuning.GroundStickVelocity; // 贴地钳制，避免下落速度无限累积
 
             bool jumpPressed = _controls.JumpAction != null
                 && _controls.JumpAction.WasPressedThisFrame();
@@ -82,9 +69,20 @@ namespace DontPushTheButton.Player
                 float g = Mathf.Abs(_tuning.Gravity);
                 _verticalVelocity = Mathf.Sqrt(2f * g * _tuning.JumpHeight);
             }
-
             _verticalVelocity += _tuning.Gravity * Time.deltaTime;
-            _controller.Move(Vector3.up * (_verticalVelocity * Time.deltaTime));
+            Vector3 vertical = Vector3.up * (_verticalVelocity * Time.deltaTime);
+
+            // 3) 合并为单次 Move（水平 + 垂直一起）——保证下一帧 isGrounded 正确反映接地
+            _controller.Move(horizontal + vertical);
+
+            // 4) 面向移动方向
+            if (moveDir.sqrMagnitude > _moveInputThreshold)
+            {
+                Quaternion target = Quaternion.LookRotation(moveDir, Vector3.up);
+                transform.rotation = _tuning.TurnSpeed <= 0f
+                    ? target
+                    : Quaternion.RotateTowards(transform.rotation, target, _tuning.TurnSpeed * Time.deltaTime);
+            }
         }
     }
 }

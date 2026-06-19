@@ -19,6 +19,8 @@ namespace DontPushTheButton.Config
         [SerializeField] private float _jumpHeight = 1.5f;
         [Tooltip("重力加速度 (m/s²)，向下为负")]
         [SerializeField] private float _gravity = -20f;
+        [Tooltip("贴地钳制速度 (m/s)：grounded 时把下落速度钳到此值，避免无限累积；负值向下")]
+        [SerializeField] private float _groundStickVelocity = -2f;
 
         [Header("转向")]
         [Tooltip("面向移动方向的旋转速度 (°/s)，<=0 = 立即朝向")]
@@ -27,6 +29,7 @@ namespace DontPushTheButton.Config
         public float MoveSpeed => _moveSpeed;
         public float JumpHeight => _jumpHeight;
         public float Gravity => _gravity;
+        public float GroundStickVelocity => _groundStickVelocity;
         public float TurnSpeed => _turnSpeed;
     }
 }
