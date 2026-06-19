@@ -1,0 +1,20 @@
+{
+    "name": "DontPushTheButton.Editor",
+    "rootNamespace": "DontPushTheButton.Editor",
+    "references": [
+        "DontPushTheButton.Runtime",
+        "Unity.Cinemachine",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
