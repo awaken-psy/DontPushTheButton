@@ -14,5 +14,5 @@ description: 里程碑工作流的通用规则，所有里程碑共享
 
 ## 本项目补充
 - **已接入 MCP for Unity**：Unity 编辑器打开 + MCP 面板 session active 时，Claude 经 `UnityMCP`（local scope 不进 git；配置见 `docs/config/MCP.md`）可直接操作 Unity——`read_console` 查报错、`find_gameobjects`/`manage_scene` 查场景、`run_tests` 跑测试、`manage_packages` 装包查包，作为 `MCP 验证` 手段。与无头 `-batchmode` 编译验证互补：MCP 需 Unity 开着，batchmode 可无人值守。测试方式优先级见 `.claude/commands/next.md`。
-- **GDD 是设计单一事实来源**：机制/数值调整先改 `docs/design/GDD_键位重构_v0.3.md`，再落到代码与 ScriptableObject。
+- **GDD 是设计单一事实来源**：机制/数值调整先改 `docs/design/GDD_键位重构_v1.0.md`，再落到代码与 ScriptableObject（v0.6 / v0.9 / v0.9a 保留作历史）。
 - **git 协作**：2-3 人，`feature/xxx` 分支 + PR；`main` 保持可玩。Claude 的 git 执行准则见 `.claude/rules/git-rules.md`，人类协作规范见 `docs/config/GIT.md`。
