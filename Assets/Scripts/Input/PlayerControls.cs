@@ -4,12 +4,12 @@ using UnityEngine.InputSystem;
 namespace DontPushTheButton.Input
 {
     /// <summary>
-    /// 玩家输入封装（M1 固定 Action Map）。
-    /// 把 PlayerControls.inputactions 资产里的 Player/Move、Look、Jump 三个 Action
-    /// 暴露为强类型属性，供角色控制器读取。
-    /// M2 会把这套结构重构为「能力(Ability)」并支持运行时动态重绑。
+    /// 玩家输入封装（M1 固定 Action Map，M2.1 加 Push）。
+    /// 把 PlayerControls.inputactions 资产里的 Player/Move、Look、Jump、Push 四个 Action
+    /// 暴露为强类型属性，供 PlayerAbilityController / 各能力读取。
+    /// M2.5 运行时动态重绑时，action 来源将从固定映射改为绑定表。
     /// </summary>
-    [RequireComponent(typeof(CharacterController))] // 预留：1.4 角色控制器挂同一对象
+    [RequireComponent(typeof(CharacterController))] // 角色控制器挂同一对象
     public class PlayerControls : MonoBehaviour
     {
         [SerializeField] private InputActionAsset _actions;
@@ -17,6 +17,7 @@ namespace DontPushTheButton.Input
         public InputAction MoveAction { get; private set; }
         public InputAction LookAction { get; private set; }
         public InputAction JumpAction { get; private set; }
+        public InputAction PushAction { get; private set; }
 
         private void Awake()
         {
@@ -29,6 +30,7 @@ namespace DontPushTheButton.Input
             MoveAction = _actions.FindAction("Move");
             LookAction = _actions.FindAction("Look");
             JumpAction = _actions.FindAction("Jump");
+            PushAction = _actions.FindAction("Push");
         }
 
         private void OnEnable()
@@ -36,6 +38,7 @@ namespace DontPushTheButton.Input
             MoveAction?.Enable();
             LookAction?.Enable();
             JumpAction?.Enable();
+            PushAction?.Enable();
         }
 
         private void OnDisable()
@@ -43,6 +46,7 @@ namespace DontPushTheButton.Input
             MoveAction?.Disable();
             LookAction?.Disable();
             JumpAction?.Disable();
+            PushAction?.Disable();
         }
     }
 }

@@ -77,7 +77,7 @@ namespace DontPushTheButton.EditorTools
 
         private static Transform FindFollowTarget()
         {
-            var mover = Object.FindObjectOfType<DontPushTheButton.Player.PlayerMover>();
+            var mover = Object.FindObjectOfType<DontPushTheButton.Player.PlayerAbilityController>();
             if (mover != null) return mover.transform;
             GameObject go = GameObject.Find("Player");
             return go != null ? go.transform : null;
