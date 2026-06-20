@@ -106,14 +106,31 @@ namespace DontPushTheButton.UI
             RefreshValidation();
         }
 
-        /// <summary>J7 WASD 自动填入（占位）：无 carryover 时填默认 WASD 布局。</summary>
+        /// <summary>J7 默认布局（开箱即用）：无 carryover 时填 WASD 移动 + 默认能力。
+        /// 超载键优先绑首个能力（强化版），其余非移动键绑后续。玩家可在 UI 改。</summary>
         private void ApplyCarryoverOrDefault()
         {
-            if (_carryoverConfig != null) { /* M2.8 多关：复用上关绑定 */ return; }
+            if (_carryoverConfig != null) return; // M2.8 多关：复用上关绑定
             TryDefaultBind("W", BindingItem.Move(MoveDirection.Up));
             TryDefaultBind("A", BindingItem.Move(MoveDirection.Left));
             TryDefaultBind("S", BindingItem.Move(MoveDirection.Down));
             TryDefaultBind("D", BindingItem.Move(MoveDirection.Right));
+            if (_levelConfig == null) return;
+            // 默认能力：超载键先绑首个能力（强化版），其余非移动键绑后续
+            int abIdx = 0;
+            for (int pass = 0; pass < 2; pass++)
+            {
+                foreach (var k in _levelConfig.AvailableKeys)
+                {
+                    if (abIdx >= _levelConfig.AvailableAbilities.Count) break;
+                    bool isMove = k.KeyName == "W" || k.KeyName == "A" || k.KeyName == "S" || k.KeyName == "D";
+                    if (isMove) continue;
+                    if (pass == 0 && !k.IsOverload) continue;
+                    if (pass == 1 && k.IsOverload) continue;
+                    TryDefaultBind(k.KeyName, BindingItem.Of(_levelConfig.AvailableAbilities[abIdx]));
+                    abIdx++;
+                }
+            }
         }
 
         private void TryDefaultBind(string keyName, BindingItem item)
