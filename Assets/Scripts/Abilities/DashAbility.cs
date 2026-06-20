@@ -32,8 +32,8 @@ namespace DontPushTheButton.Abilities
             Vector3 fwd = ctx.Body.forward; fwd.y = 0f; fwd.Normalize();
             Vector3 right = ctx.Body.right; right.y = 0f; right.Normalize();
             Vector3 dir = right * moveIn.x + fwd * moveIn.y;
-            if (dir.sqrMagnitude < 0.01f) dir = fwd; // 无输入按朝向
-            else dir.Normalize();
+            if (dir.sqrMagnitude < 0.01f) return; // 只朝当前移动方向，无移动输入不 dash
+            dir.Normalize();
 
             bool overload = ctx.IsOverloadTrigger(Kind);
             float dist = _dashTuning.DashDistance * (overload ? 2f : 1f); // 超载 dash×2
