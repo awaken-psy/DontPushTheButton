@@ -32,6 +32,7 @@ namespace DontPushTheButton.Abilities
                 {
                     v *= _overloadJumpMultiplier;
                     _flyEndTime = Time.time + _overloadFlyDuration;
+                    ctx.ChargeOverload(Kind); // 确认超载起跳（已过 IsGrounded），扣一次腐败
                 }
                 ctx.SetVerticalVelocity(v);
             }

@@ -11,7 +11,8 @@ namespace DontPushTheButton.Player
     /// <summary>
     /// 能力驱动的角色物理权威 + 输入权威（M2.5：按 LoadoutConfig 轮询 Keyboard 驱动能力 + 超载触发腐败）。
     /// 每帧轮询 LoadoutConfig 的槽位：移动方向读 isPressed，能力读 wasPressedThisFrame；
-    /// 超载键按下 → CorruptionTracker.AddOverloadPress + 标记该次触发超载强化。
+    /// 超载键按下 → 挂账待扣费(_pendingOverloadCharges) + 标记该次触发超载强化；
+    /// 能力确认执行时经 ChargeOverload 扣腐败（未生效不扣，修空中连按连续触发）。
     /// 物理 Move 只在此处合并单次（保证 isGrounded 时机，规避双 Move 坑）。
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
@@ -35,6 +36,8 @@ namespace DontPushTheButton.Player
         private Vector2 _moveInput;
         private readonly HashSet<AbilityKind> _pressedAbilities = new HashSet<AbilityKind>();
         private readonly HashSet<AbilityKind> _overloadAbilities = new HashSet<AbilityKind>();
+        // 本帧按下、标记为超载、待扣费的能力（能力确认执行时 ChargeOverload 消费；未生效则帧末随 Clear 丢弃）
+        private readonly HashSet<AbilityKind> _pendingOverloadCharges = new HashSet<AbilityKind>();
 
         // ---- IAbilityContext ----
         public bool IsGrounded => _controller.isGrounded;
@@ -44,6 +47,12 @@ namespace DontPushTheButton.Player
         public Vector2 MoveInput => _moveInput;
         public bool WasPressedThisFrame(AbilityKind k) => _pressedAbilities.Contains(k);
         public bool IsOverloadTrigger(AbilityKind k) => _overloadAbilities.Contains(k);
+        public bool ChargeOverload(AbilityKind k)
+        {
+            if (!_pendingOverloadCharges.Remove(k)) return false; // 本次按下非超载或已扣过 → 不扣
+            if (_corruption != null) _corruption.AddOverloadPress();
+            return true;
+        }
         public CharacterController Controller => _controller;
         public LoadoutConfig Loadout => _loadout;
         public void AddHorizontal(Vector3 d) => _horizontalThisFrame += d;
@@ -132,6 +141,7 @@ namespace DontPushTheButton.Player
             _moveInput = Vector2.zero;
             _pressedAbilities.Clear();
             _overloadAbilities.Clear();
+            _pendingOverloadCharges.Clear();
             if (_loadout == null) return;
             var kb = Keyboard.current;
             if (kb == null) return;
@@ -150,9 +160,9 @@ namespace DontPushTheButton.Player
                         if (DirVec.TryGetValue(item.Direction, out var v)) _moveInput += v;
                         if (slot.IsOverload) _overloadAbilities.Add(AbilityKind.Move);
                     }
-                    // 移动绑超载：按下加腐败（高频→腐败快，极限策略）
-                    if (slot.IsOverload && k.wasPressedThisFrame && _corruption != null)
-                        _corruption.AddOverloadPress();
+                    // 移动绑超载：按下挂账（待 MoveAbility 启动超载加速时 ChargeOverload 扣费；未启动不扣）
+                    if (slot.IsOverload && k.wasPressedThisFrame)
+                        _pendingOverloadCharges.Add(AbilityKind.Move);
                 }
                 else // Ability
                 {
@@ -162,7 +172,7 @@ namespace DontPushTheButton.Player
                         if (slot.IsOverload)
                         {
                             _overloadAbilities.Add(item.Ability);
-                            if (_corruption != null) _corruption.AddOverloadPress();
+                            _pendingOverloadCharges.Add(item.Ability); // 挂账，待能力确认执行时 ChargeOverload 扣费
                         }
                     }
                 }

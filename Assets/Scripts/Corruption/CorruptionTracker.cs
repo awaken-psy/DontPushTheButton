@@ -29,7 +29,7 @@ namespace DontPushTheButton.Corruption
         /// <summary>值变化事件（HUD 监听刷新）。M2.6。</summary>
         public event Action OnChanged;
 
-        /// <summary>按超载键加腐败（GDD 4.3/4.4：超载键按即腐败，无论绑能力/移动）。</summary>
+        /// <summary>超载强化生效时由能力经 IAbilityContext.ChargeOverload 触发：加一次腐败（GDD 4.3/4.4；未生效不扣）。</summary>
         public void AddOverloadPress()
         {
             if (IsFull || _tuning == null) return;

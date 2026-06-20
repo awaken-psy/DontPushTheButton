@@ -33,7 +33,12 @@ namespace DontPushTheButton.Abilities
             if (!Physics.Raycast(origin, dir, out RaycastHit hit, _pushTuning.Range)) return;
             if (!hit.collider.CompareTag("Pushable")) return;
 
-            float dist = _pushTuning.PushDistance * (ctx.IsOverloadTrigger(Kind) ? _overloadPushMultiplier : 1f);
+            float dist = _pushTuning.PushDistance;
+            if (ctx.IsOverloadTrigger(Kind))
+            {
+                dist *= _overloadPushMultiplier;
+                ctx.ChargeOverload(Kind); // 确认命中推动超载（已过冷却/命中检查），扣一次腐败
+            }
             hit.transform.position += dir * dist;
             _lastPushTime = Time.time;
         }

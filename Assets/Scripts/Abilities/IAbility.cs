@@ -37,6 +37,8 @@ namespace DontPushTheButton.Abilities
         bool WasPressedThisFrame(AbilityKind kind);
         /// <summary>该能力本次触发是否超载强化（绑在超载键上）。</summary>
         bool IsOverloadTrigger(AbilityKind kind);
+        /// <summary>能力确认执行超载强化时调用，扣一次腐败（每按下只扣一次；未生效不扣）。返回是否本次扣费。</summary>
+        bool ChargeOverload(AbilityKind kind);
 
         void AddHorizontal(Vector3 worldDisp);
         void SetVerticalVelocity(float v);
