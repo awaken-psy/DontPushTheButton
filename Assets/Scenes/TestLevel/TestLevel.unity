@@ -11929,9 +11929,17 @@ MonoBehaviour:
   m_Mesh: {fileID: 1465819210}
   m_VersionIndex: 2232
   m_IsSelectable: 1
-  m_SelectedFaces: 
-  m_SelectedEdges: []
-  m_SelectedVertices: 
+  m_SelectedFaces: 04000000
+  m_SelectedEdges:
+  - a: 16
+    b: 17
+  - a: 18
+    b: 16
+  - a: 17
+    b: 19
+  - a: 19
+    b: 18
+  m_SelectedVertices: 10000000110000001200000013000000
 --- !u!4 &1843031095
 Transform:
   m_ObjectHideFlags: 0
@@ -16391,7 +16399,7 @@ PrefabInstance:
     - target: {fileID: 6410101045141612717, guid: df6857b3c7744e24d8d018ba939a27f0,
         type: 3}
       propertyPath: m_VersionIndex
-      value: 932
+      value: 938
       objectReference: {fileID: 0}
     - target: {fileID: 6459126378749668889, guid: df6857b3c7744e24d8d018ba939a27f0,
         type: 3}
@@ -16411,7 +16419,7 @@ PrefabInstance:
     - target: {fileID: 9155416898407294896, guid: df6857b3c7744e24d8d018ba939a27f0,
         type: 3}
       propertyPath: m_VersionIndex
-      value: 1089
+      value: 1095
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
