@@ -76,3 +76,7 @@ Thumbs.db
 # Claude Code 个人/本地配置（不共享，可能含个人偏好与凭证）
 .claude/settings.local.json
 .claude/settings.local.*
+
+# 调试截图（MCP manage_camera 本地产物，不入库）
+/Assets/Screenshots/
+/Assets/Screenshots.meta
