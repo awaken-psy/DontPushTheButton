@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 105040826}
   - component: {fileID: 105040825}
   m_Layer: 0
-  m_Name: Crate3
+  m_Name: Box_Green
   m_TagString: Pushable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -161,7 +161,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 959f8979c88537eda8a681f5cf01154f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -841,7 +841,7 @@ GameObject:
   - component: {fileID: 358207262}
   - component: {fileID: 358207261}
   m_Layer: 0
-  m_Name: Crate2
+  m_Name: Box_Blue
   m_TagString: Pushable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -867,7 +867,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 1b072d809458affc0bd3a3400cfd625f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1433,7 +1433,7 @@ GameObject:
   - component: {fileID: 683746783}
   - component: {fileID: 683746782}
   m_Layer: 0
-  m_Name: TestCrate
+  m_Name: Box_Red
   m_TagString: Pushable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1459,7 +1459,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: a700a7849bed41ec1819b4eec1913acb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3088,7 +3088,7 @@ GameObject:
   - component: {fileID: 2099983650}
   - component: {fileID: 2099983649}
   m_Layer: 0
-  m_Name: HookTarget
+  m_Name: Hook_Yellow
   m_TagString: Pushable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3114,7 +3114,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0f517d0a63a58439f86e2b58ccab9008, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
