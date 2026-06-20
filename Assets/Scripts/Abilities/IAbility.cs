@@ -5,9 +5,9 @@ using DontPushTheButton.Config;
 namespace DontPushTheButton.Abilities
 {
     /// <summary>
-    /// 能力种类（M2.1：Move/Jump/Push；M3 将补 Pull/Dash）。
+    /// 能力种类（Move/Jump/Push + Pull（M3.2）；Dash 待 M3.4 补）。
     /// </summary>
-    public enum AbilityKind { Move, Jump, Push }
+    public enum AbilityKind { Move, Jump, Push, Pull }
 
     /// <summary>
     /// 能力触发类型（GDD 4.2：移动是唯一持续型能力）。
@@ -27,6 +27,7 @@ namespace DontPushTheButton.Abilities
     public interface IAbilityContext
     {
         bool IsGrounded { get; }
+        CharacterController Controller { get; }
         MovementTuning Tuning { get; }
         Transform Body { get; }
         Camera RelativeCamera { get; }

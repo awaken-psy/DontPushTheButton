@@ -140,6 +140,7 @@ GameObject:
   - component: {fileID: 178655316}
   - component: {fileID: 178655320}
   - component: {fileID: 178655321}
+  - component: {fileID: 178655322}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -251,8 +252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _pushTuning: {fileID: 11400000, guid: 0cc293bd1ec1bfe89bb2ba7827f8ce54, type: 2}
-  _rayHeight: 0.5
-  _overloadPushMultiplier: 2
+  _grabHeight: 0.5
 --- !u!114 &178655317
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,6 +326,20 @@ MonoBehaviour:
   _fallThreshold: -5
   _respawnPos: {x: 0, y: 1, z: -5}
   _respawnEuler: {x: 0, y: 0, z: 0}
+--- !u!114 &178655322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 178655305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 797c0383d1ef4894692bbaf34a99bb9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pullTuning: {fileID: 11400000, guid: d06e7f234c194faf99a0a943b76b5386, type: 2}
+  _grabHeight: 0.5
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
