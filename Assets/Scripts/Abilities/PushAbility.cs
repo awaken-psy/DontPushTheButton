@@ -19,6 +19,8 @@ namespace DontPushTheButton.Abilities
         [SerializeField] private PushTuning _pushTuning;
         [Tooltip("抓取/持有时物体的世界 Y 高度（对准物体中心）")]
         [SerializeField] private float _grabHeight = 0.5f;
+        [Tooltip("持有物体相对玩家中心的 Y 偏移（玩家起跳时物体跟着起跳；-0.5≈物体在脚部地面高度）")]
+        [SerializeField] private float _carryYOffset = -0.5f;
 
         private enum CarryState { Idle, Carrying }
         private CarryState _state = CarryState.Idle;
@@ -85,7 +87,7 @@ namespace DontPushTheButton.Abilities
             {
                 float offset = (i - (n - 1) * 0.5f) * _pushTuning.CarrySpacing; // 居中横向分布
                 Vector3 p = basePos + right * offset;
-                p.y = _grabHeight;
+                p.y = ctx.Body.position.y + _carryYOffset; // 跟随玩家 Y（起跳时物体跟着起跳）
                 _carried[i].position = p;
             }
         }
