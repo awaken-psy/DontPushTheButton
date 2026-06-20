@@ -267,9 +267,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32380193709bd2a4998e80647cc6a1db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _overloadJumpMultiplier: 1.4
-  _overloadFlyDuration: 0.45
-  _overloadFlyVelocity: 6
+  _tuning: {fileID: 11400000, guid: fb6323ac6a5640cf098bdcd9aabd9a48, type: 2}
 --- !u!114 &178655318
 MonoBehaviour:
   m_ObjectHideFlags: 0

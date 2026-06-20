@@ -27,6 +27,7 @@ namespace DontPushTheButton.Player
         [SerializeField] private CorruptionTracker _corruption;
 
         private CharacterController _controller;
+        private JumpAbility _jump; // M3.5：缓落需读 IsSlowFalling 调重力
         private readonly List<AbilityBase> _abilities = new List<AbilityBase>();
         private float _verticalVelocity;
         private Vector3 _horizontalThisFrame;
@@ -68,6 +69,7 @@ namespace DontPushTheButton.Player
         {
             _controller = GetComponent<CharacterController>();
             GetComponents(_abilities);
+            _jump = GetComponent<JumpAbility>();
             if (_tuning == null) Debug.LogError("[PlayerAbilityController] MovementTuning 未赋值", this);
             if (_relativeCamera == null) _relativeCamera = Camera.main;
             if (_corruption == null) _corruption = GetComponent<CorruptionTracker>();
@@ -110,22 +112,39 @@ namespace DontPushTheButton.Player
             if (_tuning == null) return;
             _horizontalThisFrame = Vector3.zero;
             PollInput();
+            TickContinuousAbilities(); // 移动 / 跳跃（M3.5 Jump 改 Continuous 飞行状态机）
+            TickInstantAbilities();   // 推动 / 拉动 / 冲刺
+            ApplyGravity();           // 贴地钳制 + 重力（缓落：超载飞行后 IsSlowFalling 减重力）
+            ApplyMove();              // 合并单次 Move（保证 isGrounded 时机）
+        }
 
-            // 持续型（移动）
+        private void TickContinuousAbilities()
+        {
             foreach (var a in _abilities)
                 if (a.Trigger == AbilityTrigger.Continuous) a.TickContinuous(this);
+        }
 
-            // 垂直：读上一帧 Move 后的 isGrounded，贴地钳制
+        private void TickInstantAbilities()
+        {
+            foreach (var a in _abilities)
+                if (a.Trigger == AbilityTrigger.Instant) a.TickInstant(this);
+        }
+
+        /// <summary>贴地钳制 + 重力；缓落态（超载飞行后）重力 × FallGravityScale。</summary>
+        private void ApplyGravity()
+        {
             bool grounded = _controller.isGrounded;
             if (grounded && _verticalVelocity < 0f)
                 _verticalVelocity = _tuning.GroundStickVelocity;
+            float g = _tuning.Gravity;
+            if (_jump != null && _jump.IsSlowFalling)
+                g *= _jump.FallGravityScale;
+            _verticalVelocity += g * Time.deltaTime;
+        }
 
-            // 瞬时型（跳跃/推动 + 超载强化）
-            foreach (var a in _abilities)
-                if (a.Trigger == AbilityTrigger.Instant) a.TickInstant(this);
-
-            // 重力 + 合并单次 Move
-            _verticalVelocity += _tuning.Gravity * Time.deltaTime;
+        /// <summary>合并单次 Move（水平 + 垂直），保证下一帧 isGrounded 正确。</summary>
+        private void ApplyMove()
+        {
             _controller.Move(_horizontalThisFrame + Vector3.up * (_verticalVelocity * Time.deltaTime));
         }
 
