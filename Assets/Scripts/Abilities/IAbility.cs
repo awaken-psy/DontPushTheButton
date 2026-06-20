@@ -51,7 +51,6 @@ namespace DontPushTheButton.Abilities
     {
         AbilityKind Kind { get; }
         AbilityTrigger Trigger { get; }
-        void SetOverloadActive(bool active);
     }
 
     /// <summary>
@@ -64,6 +63,5 @@ namespace DontPushTheButton.Abilities
         public virtual OverloadParadigm Overload => OverloadParadigm.None;
         public virtual void TickContinuous(IAbilityContext ctx) { }
         public virtual void TickInstant(IAbilityContext ctx) { }
-        public virtual void SetOverloadActive(bool active) { }
     }
 }

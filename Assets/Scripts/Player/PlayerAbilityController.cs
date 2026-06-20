@@ -58,12 +58,6 @@ namespace DontPushTheButton.Player
         public void AddHorizontal(Vector3 d) => _horizontalThisFrame += d;
         public void SetVerticalVelocity(float v) => _verticalVelocity = v;
 
-        // KeyName（LoadoutConfig）→ InputSystem Key 映射
-        private static readonly Dictionary<string, Key> KeyMap = new Dictionary<string, Key>
-        {
-            { "W", Key.W }, { "A", Key.A }, { "S", Key.S }, { "D", Key.D },
-            { "Space", Key.Space }, { "E", Key.E }, { "Q", Key.Q },
-        };
         private static readonly Dictionary<MoveDirection, Vector2> DirVec = new Dictionary<MoveDirection, Vector2>
         {
             { MoveDirection.Up, Vector2.up }, { MoveDirection.Down, Vector2.down },
@@ -149,7 +143,7 @@ namespace DontPushTheButton.Player
             foreach (var slot in _loadout.Slots)
             {
                 if (!slot.Binding.HasValue) continue;
-                if (!KeyMap.TryGetValue(slot.KeyName, out var key)) continue;
+                if (!System.Enum.TryParse<Key>(slot.KeyName, out var key)) continue; // KeyName 直接用 InputSystem Key 枚举名（W/Space/E…），无需维护映射表
                 var k = kb[key];
                 var item = slot.Binding.Value;
 
