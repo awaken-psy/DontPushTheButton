@@ -38,11 +38,7 @@ namespace DontPushTheButton.Core
             DontDestroyOnLoad(gameObject);
         }
 
-        private void OnEnable()
-        {
-            if (_corruption != null) _corruption.OnCorruptionFull += EnterFailed;
-            if (_levelExit != null) _levelExit.OnReached.AddListener(EnterWon);
-        }
+        private void OnEnable() { }
 
         private void OnDisable()
         {
@@ -52,6 +48,20 @@ namespace DontPushTheButton.Core
 
         private void Start()
         {
+            // 运行时确保引用（防 SerializeField 断，如 builder 重建 LoadoutCanvas 使旧引用失效）
+            if (_loadoutUI == null) _loadoutUI = FindObjectOfType<LoadoutUIController>();
+            if (_loadoutCanvas == null && _loadoutUI != null) _loadoutCanvas = _loadoutUI.gameObject;
+            if (_corruptionHUD == null)
+            {
+                var hud = FindObjectOfType<CorruptionHUD>();
+                if (hud != null) _corruptionHUD = hud.gameObject;
+            }
+            if (_player == null) _player = FindObjectOfType<PlayerAbilityController>();
+            if (_corruption == null) _corruption = FindObjectOfType<CorruptionTracker>();
+            if (_levelExit == null) _levelExit = FindObjectOfType<LevelExit>();
+            // 订阅事件（引用就绪后）
+            if (_corruption != null) _corruption.OnCorruptionFull += EnterFailed;
+            if (_levelExit != null) _levelExit.OnReached.AddListener(EnterWon);
             EnterLoadout(); // 初始进配置阶段
         }
 

@@ -61,9 +61,13 @@ namespace DontPushTheButton.UI
         private void BuildSlots()
         {
             if (_slotContainer == null || _slotPrefab == null) return;
+            _slotUIs.Clear();
+            for (int i = _slotContainer.childCount - 1; i >= 0; i--)
+                DestroyImmediate(_slotContainer.GetChild(i).gameObject); // 清场景残留/旧子
             for (int i = 0; i < _config.Slots.Count; i++)
             {
                 var ui = Instantiate(_slotPrefab, _slotContainer);
+                ui.gameObject.SetActive(true);
                 var s = _config.Slots[i];
                 ui.Setup(i, s.KeyName, s.IsOverload, this);
                 _slotUIs.Add(ui);
@@ -73,6 +77,8 @@ namespace DontPushTheButton.UI
         private void BuildIcons()
         {
             if (_iconContainer == null || _iconPrefab == null) return;
+            for (int i = _iconContainer.childCount - 1; i >= 0; i--)
+                DestroyImmediate(_iconContainer.GetChild(i).gameObject);
             // 移动方向（默认每关可用，GDD §A 移动=4槽是绑定项）
             foreach (MoveDirection d in System.Enum.GetValues(typeof(MoveDirection)))
                 InstantiateIcon(BindingItem.Move(d), d.ToString());
@@ -85,6 +91,7 @@ namespace DontPushTheButton.UI
         private void InstantiateIcon(BindingItem item, string label)
         {
             var icon = Instantiate(_iconPrefab, _iconContainer);
+            icon.gameObject.SetActive(true); // 模板 inactive，克隆后激活
             icon.Setup(item, label);
         }
 

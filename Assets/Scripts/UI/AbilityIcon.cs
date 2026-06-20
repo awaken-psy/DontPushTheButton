@@ -34,7 +34,9 @@ namespace DontPushTheButton.UI
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (_canvasGroup != null) _canvasGroup.blocksRaycasts = false;
+            var cg = GetComponent<CanvasGroup>();
+            if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
+            cg.blocksRaycasts = false; // 拖动时图标不挡 Drop 射线
             transform.SetParent(transform.root, true); // 移到顶层避免被容器裁剪
         }
 
@@ -45,7 +47,8 @@ namespace DontPushTheButton.UI
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            if (_canvasGroup != null) _canvasGroup.blocksRaycasts = true;
+            var cg = GetComponent<CanvasGroup>();
+            if (cg != null) cg.blocksRaycasts = true;
             if (_originParent != null) transform.SetParent(_originParent, false);
             transform.localPosition = _originLocalPos;
         }

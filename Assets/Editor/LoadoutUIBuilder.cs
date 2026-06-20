@@ -10,9 +10,8 @@ using DontPushTheButton.Config;
 namespace DontPushTheButton.Editor
 {
     /// <summary>
-    /// 构建配置阶段 UI（M2.4）。菜单 DPTB/Build Loadout UI (M2.4)。
-    /// 创建 LoadoutCanvas（Canvas + 槽位/图标容器 + 开始按钮 + 隐藏模板），
-    /// 用 SerializedObject 赋 LoadoutUIController 的 private 引用 + Level2，存 prefab 并在当前场景实例化。
+    /// 构建配置阶段 UI（M2.4，M2.9 重写修 builder 系统性 bug）。
+    /// 菜单 DPTB/Build Loadout UI (M2.4)。删旧 LoadoutCanvas → 重建（正确 size/color/active）。
     /// </summary>
     public static class LoadoutUIBuilder
     {
@@ -21,7 +20,10 @@ namespace DontPushTheButton.Editor
         [MenuItem("DPTB/Build Loadout UI (M2.4)")]
         public static void Build()
         {
-            // ---- Canvas 根 ----
+            // 删旧场景实例（避免重复）
+            var old = GameObject.Find("LoadoutCanvas");
+            if (old != null) Object.DestroyImmediate(old);
+
             var root = new GameObject("LoadoutCanvas");
             var canvas = root.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -31,49 +33,48 @@ namespace DontPushTheButton.Editor
             root.AddComponent<GraphicRaycaster>();
             var ctrl = root.AddComponent<LoadoutUIController>();
 
-            // 背景
+            // 背景（全屏半透明黑，白字可见）
             var bg = UICreate.Img("Background", root.transform, new Color(0, 0, 0, 0.85f));
             UIStretch(bg);
 
-            // 标题
-            var title = UICreate.Text("Title", root.transform, "配置阶段 — 拖拽能力图标到按键（再次点击解绑）", 30);
-            UISetAnchored(title, new Vector2(0.5f, 1f), new Vector2(0, -30));
+            // 标题（顶部）
+            var title = UICreate.Text("Title", root.transform, "配置阶段 — 拖拽能力图标到按键（再次点击解绑）", 30, Color.white);
+            UIPlace(title, new Vector2(0.5f, 1f), new Vector2(0, -50), new Vector2(1000, 50));
 
-            // 槽位容器
+            // 槽位容器（中上）
             var slotCont = UICreate.Empty("SlotContainer", root.transform);
             var slg = slotCont.AddComponent<HorizontalLayoutGroup>();
-            slg.spacing = 16f; slg.padding = new RectOffset(40, 40, 0, 0);
+            slg.spacing = 16f; slg.padding = new RectOffset(0, 0, 0, 0);
             slg.childAlignment = TextAnchor.UpperCenter;
-            slg.childControlWidth = slg.childControlHeight = false;
-            slotCont.AddComponent<ContentSizeFitter>();
-            UISetAnchored(slotCont, new Vector2(0.5f, 0.7f), new Vector2(0, 0));
+            slg.childControlWidth = slg.childControlHeight = slg.childScaleWidth = slg.childScaleHeight = false;
+            UIPlace(slotCont, new Vector2(0.5f, 0.72f), Vector2.zero, new Vector2(1100, 160));
 
-            // 图标容器
+            // 图标容器（中下）
             var iconCont = UICreate.Empty("IconContainer", root.transform);
             var ilg = iconCont.AddComponent<HorizontalLayoutGroup>();
-            ilg.spacing = 16f; ilg.padding = new RectOffset(40, 40, 0, 0);
+            ilg.spacing = 16f; ilg.padding = new RectOffset(0, 0, 0, 0);
             ilg.childAlignment = TextAnchor.UpperCenter;
-            iconCont.AddComponent<ContentSizeFitter>();
-            UISetAnchored(iconCont, new Vector2(0.5f, 0.45f), new Vector2(0, 0));
+            ilg.childControlWidth = ilg.childControlHeight = ilg.childScaleWidth = ilg.childScaleHeight = false;
+            UIPlace(iconCont, new Vector2(0.5f, 0.45f), Vector2.zero, new Vector2(1100, 140));
 
             // 校验文本
-            var valText = UICreate.Text("ValidationText", root.transform, "", 26);
-            UISetAnchored(valText, new Vector2(0.5f, 0.25f), new Vector2(0, 0));
+            var valText = UICreate.Text("ValidationText", root.transform, "", 26, Color.yellow);
+            UIPlace(valText, new Vector2(0.5f, 0.25f), Vector2.zero, new Vector2(1000, 80));
 
             // 开始按钮
             var btn = UICreate.Img("StartButton", root.transform, new Color(0.2f, 0.7f, 0.3f));
             var button = btn.AddComponent<Button>();
-            var btnLabel = UICreate.Text("Label", btn.transform, "开始关卡", 28);
+            var btnLabel = UICreate.Text("Label", btn.transform, "开始关卡", 28, Color.white);
             UIStretch(btnLabel);
-            UISetAnchored(btn, new Vector2(0.5f, 0.12f), new Vector2(240, 70));
+            UIPlace(btn, new Vector2(0.5f, 0.12f), Vector2.zero, new Vector2(260, 70));
 
-            // 模板（隐藏）
+            // 模板（隐藏；LoadoutUIController.BuildSlots/BuildIcons 会 SetActive(true)）
             var slotTemplate = CreateSlotTemplate(root.transform);
             slotTemplate.SetActive(false);
             var iconTemplate = CreateIconTemplate(root.transform);
             iconTemplate.SetActive(false);
 
-            // 赋 controller private 引用（SerializedObject）
+            // 赋 controller private 引用
             var so = new SerializedObject(ctrl);
             so.FindProperty("_levelConfig").objectReferenceValue = AssetDatabase.LoadAssetAtPath<LevelConfigSO>("Assets/Config/Level2.asset");
             so.FindProperty("_slotContainer").objectReferenceValue = slotCont.transform;
@@ -84,35 +85,28 @@ namespace DontPushTheButton.Editor
             so.FindProperty("_startButton").objectReferenceValue = button;
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            // 存 prefab
             Directory.CreateDirectory("Assets/Prefabs/UI");
             PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
-
-            // EventSystem（新 Input System 用 InputSystemUIInputModule）
             EnsureEventSystem();
-
-            // 场景实例化
+            // 场景实例化（Start 自动 Build）
             PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath));
-            Object.DestroyImmediate(root); // 删除临时根（prefab 已存）
+            Object.DestroyImmediate(root);
 
-            Debug.Log($"[LoadoutUIBuilder] LoadoutCanvas prefab 存到 {PrefabPath}，已实例化到当前场景。");
+            Debug.Log($"[LoadoutUIBuilder] 重建 LoadoutCanvas（M2.9 修 builder bug）→ {PrefabPath}");
         }
 
         private static GameObject CreateSlotTemplate(Transform parent)
         {
-            // 槽位：白底（超载由 KeySlotUI 染红）+ 键名 + 绑定标签 + 超载红框
             var go = UICreate.Img("SlotTemplate", parent, Color.white);
-            var rt = (RectTransform)go.transform;
-            rt.sizeDelta = new Vector2(140, 140);
-            var key = UICreate.Text("KeyLabel", go.transform, "W", 30);
-            UISetAnchored(key, new Vector2(0.5f, 0.85f), Vector2.zero);
-            var bind = UICreate.Text("BindingLabel", go.transform, "", 20);
-            UISetAnchored(bind, new Vector2(0.5f, 0.3f), Vector2.zero);
+            ((RectTransform)go.transform).sizeDelta = new Vector2(140, 140);
+            var key = UICreate.Text("KeyLabel", go.transform, "W", 30, Color.black);
+            UIPlace(key, new Vector2(0.5f, 0.8f), Vector2.zero, new Vector2(140, 35));
+            var bind = UICreate.Text("BindingLabel", go.transform, "", 20, Color.black);
+            UIPlace(bind, new Vector2(0.5f, 0.3f), Vector2.zero, new Vector2(140, 40));
             var highlight = UICreate.Img("OverloadHighlight", go.transform, new Color(1f, 0.2f, 0.2f, 0.4f));
             UIStretch(highlight);
             highlight.SetActive(false);
             var slotUI = go.AddComponent<KeySlotUI>();
-            // 赋 KeySlotUI private 引用
             var so = new SerializedObject(slotUI);
             so.FindProperty("_keyLabel").objectReferenceValue = key.GetComponent<Text>();
             so.FindProperty("_bg").objectReferenceValue = go.GetComponent<Image>();
@@ -125,9 +119,8 @@ namespace DontPushTheButton.Editor
         private static GameObject CreateIconTemplate(Transform parent)
         {
             var go = UICreate.Img("IconTemplate", parent, new Color(0.3f, 0.4f, 0.6f));
-            var rt = (RectTransform)go.transform;
-            rt.sizeDelta = new Vector2(120, 120);
-            var label = UICreate.Text("Label", go.transform, "", 22);
+            ((RectTransform)go.transform).sizeDelta = new Vector2(120, 120);
+            var label = UICreate.Text("Label", go.transform, "", 22, Color.white);
             UIStretch(label);
             var cg = go.AddComponent<CanvasGroup>();
             var icon = go.AddComponent<AbilityIcon>();
@@ -158,15 +151,14 @@ namespace DontPushTheButton.Editor
             public static GameObject Img(string name, Transform parent, Color c)
             {
                 var go = Empty(name, parent);
-                var img = go.AddComponent<Image>();
-                img.color = c;
+                go.AddComponent<Image>().color = c;
                 return go;
             }
-            public static GameObject Text(string name, Transform parent, string text, int size)
+            public static GameObject Text(string name, Transform parent, string text, int size, Color color)
             {
                 var go = Empty(name, parent);
                 var t = go.AddComponent<Text>();
-                t.text = text; t.fontSize = size; t.alignment = TextAnchor.MiddleCenter; t.color = Color.white;
+                t.text = text; t.fontSize = size; t.alignment = TextAnchor.MiddleCenter; t.color = color;
                 t.raycastTarget = false;
                 return go;
             }
@@ -179,11 +171,12 @@ namespace DontPushTheButton.Editor
             rt.offsetMin = rt.offsetMax = Vector2.zero;
         }
 
-        private static void UISetAnchored(GameObject go, Vector2 anchor, Vector2 size)
+        // anchor + anchoredPosition(pos) + sizeDelta(size) —— M2.9 修：pos 与 size 分离
+        private static void UIPlace(GameObject go, Vector2 anchor, Vector2 pos, Vector2 size)
         {
             var rt = (RectTransform)go.transform;
             rt.anchorMin = rt.anchorMax = anchor;
-            rt.anchoredPosition = Vector2.zero;
+            rt.anchoredPosition = pos;
             rt.sizeDelta = size;
         }
     }
