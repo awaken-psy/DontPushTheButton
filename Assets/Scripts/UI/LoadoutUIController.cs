@@ -144,7 +144,15 @@ namespace DontPushTheButton.UI
         private void OnStartClicked()
         {
             var r = LoadoutValidator.Validate(_config);
-            Debug.Log($"[LoadoutUI] 开始关卡（占位，M2.8 接关卡加载）。IsValid={r.IsValid}，HasWarnings={r.HasWarnings}");
+            if (!r.IsValid)
+            {
+                Debug.Log("[LoadoutUI] 配置无效（有 Error），不能开始关卡");
+                return;
+            }
+            if (DontPushTheButton.Core.GameManager.Instance != null)
+                DontPushTheButton.Core.GameManager.Instance.EnterPlaying();
+            else
+                Debug.LogWarning("[LoadoutUI] GameManager 不存在，无法进关");
         }
     }
 }
