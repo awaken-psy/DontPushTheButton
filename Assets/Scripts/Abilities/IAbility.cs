@@ -5,9 +5,9 @@ using DontPushTheButton.Config;
 namespace DontPushTheButton.Abilities
 {
     /// <summary>
-    /// 能力种类（Move/Jump/Push/Pull + Dash（M3.4））。
+    /// 能力种类（Move/Jump/Push/Pull/Dash + PushBeam（M3.3 推动光束型，与 Push 搬运型二选一））。
     /// </summary>
-    public enum AbilityKind { Move, Jump, Push, Pull, Dash }
+    public enum AbilityKind { Move, Jump, Push, Pull, Dash, PushBeam }
 
     /// <summary>
     /// 能力触发类型（GDD 4.2：移动是唯一持续型能力）。
