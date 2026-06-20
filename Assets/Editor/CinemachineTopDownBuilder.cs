@@ -9,7 +9,7 @@ namespace DontPushTheButton.EditorTools
     /// <summary>
     /// 一次性构建器：配置俯视 2.5D Cinemachine 相机（Cinemachine 3.x）。
     /// 相机跟随角色位置(Follow)、旋转固定(斜俯视 ~50°)、不随角色转向；
-    /// Body = CinemachineFramingTransposer(硬跟随/无死区/无阻尼)，Aim = 不挂(旋转固定)。
+    /// Body = CinemachinePositionComposer(硬跟随/无死区/无阻尼)，Aim = 不挂(旋转固定)。
     /// 菜单：DPTB/Build Top-Down Camera。
     /// </summary>
     public static class CinemachineTopDownBuilder
@@ -52,20 +52,23 @@ namespace DontPushTheButton.EditorTools
             vc.Follow = follow;
             vcamGo.transform.rotation = Quaternion.Euler(Pitch, Yaw, 0f);
 
-            // Body = FramingTransposer：硬跟随、无死区、无阻尼
-            CinemachineFramingTransposer body =
-                vcamGo.GetComponent<CinemachineFramingTransposer>();
+            // Body = PositionComposer（Cinemachine 3.x 替代废弃的 FramingTransposer）：硬跟随、无死区、无阻尼
+            CinemachinePositionComposer body =
+                vcamGo.GetComponent<CinemachinePositionComposer>();
             if (body == null)
-                body = vcamGo.AddComponent<CinemachineFramingTransposer>();
+                body = vcamGo.AddComponent<CinemachinePositionComposer>();
 
-            body.m_CameraDistance = Distance;
-            body.m_DeadZoneWidth = 0f;
-            body.m_DeadZoneHeight = 0f;
-            body.m_DeadZoneDepth = 0f;
-            body.m_XDamping = 0f;
-            body.m_YDamping = 0f;
-            body.m_ZDamping = 0f;
-            body.m_CenterOnActivate = false;
+            body.CameraDistance = Distance;
+            body.Damping = Vector3.zero;              // 3.x 合并 XYZ damping 为 Vector3，默认(1,1,1)需清零
+            body.DeadZoneDepth = 0f;
+            body.CenterOnActivate = false;
+            // 死区：3.x 重组进 Composition.DeadZone（Enabled+Size），置零=无死区
+            var comp = body.Composition;
+            var dz = comp.DeadZone;
+            dz.Enabled = false;
+            dz.Size = Vector2.zero;
+            comp.DeadZone = dz;
+            body.Composition = comp;
 
             // Aim：故意不挂 Aim 组件 → 旋转固定，保持上方设定的俯角
 
