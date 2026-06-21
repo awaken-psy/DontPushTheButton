@@ -6,7 +6,7 @@ namespace DontPushTheButton.Tests
 {
     /// <summary>
     /// 各能力契约单测（M3.1-3.5）：确认 Kind/Trigger/Overload 映射正确。
-    /// 回归 M3 改动：Push 搬运改 Continuous、Jump 飞行状态机改 Continuous 等。
+    /// 回归 M3 改动：Pickup 搬运改 Continuous、Jump 飞行状态机改 Continuous 等。
     /// </summary>
     [TestFixture]
     public class AbilityContractTests
@@ -32,11 +32,11 @@ namespace DontPushTheButton.Tests
             Assert.AreEqual(OverloadParadigm.StateSwitch, a.Overload);
         }
 
-        [Test] public void PushAbility_Contract()
+        [Test] public void PickupAbility_Contract()
         {
-            var a = _go.AddComponent<PushAbility>();
-            Assert.AreEqual(AbilityKind.Push, a.Kind);
-            Assert.AreEqual(AbilityTrigger.Continuous, a.Trigger); // M3.1 改（磁力枪搬运）
+            var a = _go.AddComponent<PickupAbility>();
+            Assert.AreEqual(AbilityKind.Pickup, a.Kind);
+            Assert.AreEqual(AbilityTrigger.Continuous, a.Trigger); // M3.1 磁力枪搬运
             Assert.AreEqual(OverloadParadigm.MultiTarget, a.Overload);
         }
 
@@ -56,11 +56,11 @@ namespace DontPushTheButton.Tests
             Assert.AreEqual(OverloadParadigm.StatStack, a.Overload);
         }
 
-        [Test] public void PushBeamAbility_Contract()
+        [Test] public void PushAbility_Contract()
         {
-            var a = _go.AddComponent<PushBeamAbility>();
-            Assert.AreEqual(AbilityKind.PushBeam, a.Kind);
-            Assert.AreEqual(AbilityTrigger.Instant, a.Trigger);
+            var a = _go.AddComponent<PushAbility>();
+            Assert.AreEqual(AbilityKind.Push, a.Kind);
+            Assert.AreEqual(AbilityTrigger.Instant, a.Trigger); // 光束型瞬时
             Assert.AreEqual(OverloadParadigm.StatStack, a.Overload);
         }
     }
