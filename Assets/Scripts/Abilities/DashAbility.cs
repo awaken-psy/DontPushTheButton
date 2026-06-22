@@ -27,13 +27,9 @@ namespace DontPushTheButton.Abilities
             if (!ctx.WasPressedThisFrame(Kind)) return;
             if (Time.time - _lastDashTime < _dashTuning.Cooldown) return;
 
-            // 方向：移动输入（有输入）或朝向（无输入）
-            Vector2 moveIn = ctx.MoveInput;
-            Vector3 fwd = ctx.Body.forward; fwd.y = 0f; fwd.Normalize();
-            Vector3 right = ctx.Body.right; right.y = 0f; right.Normalize();
-            Vector3 dir = right * moveIn.x + fwd * moveIn.y;
-            if (dir.sqrMagnitude < 0.01f) return; // 只朝当前移动方向，无移动输入不 dash
-            dir.Normalize();
+            // 方向：角色当前正前方（Body.forward）；需有移动输入才触发（无输入不 dash）
+            if (ctx.MoveInput.sqrMagnitude < 0.01f) return;
+            Vector3 dir = ctx.Body.forward; dir.y = 0f; dir.Normalize();
 
             bool overload = ctx.IsOverloadTrigger(Kind);
             float dist = _dashTuning.DashDistance * (overload ? 2f : 1f); // 超载 dash×2
