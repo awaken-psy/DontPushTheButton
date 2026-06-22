@@ -15,11 +15,14 @@ namespace DontPushTheButton.Corruption
         [Tooltip("腐败调参（M2.6 SO）")]
         [SerializeField] private CorruptionTuning _tuning;
 
+        /// <summary>Inspector 漏配 _tuning 时的安全网（非正常态，应配 SO）。</summary>
+        private const float DefaultMaxValue = 100f;
+
         public float Value { get; private set; }
         /// <summary>本关按超载键次数（R4 试玩用）。</summary>
         public int OverloadCount { get; private set; }
 
-        public float MaxValue => _tuning != null ? _tuning.MaxValue : 100f;
+        public float MaxValue => _tuning != null ? _tuning.MaxValue : DefaultMaxValue;
         public float Normalized => MaxValue > 0f ? Value / MaxValue : 0f;
         public bool IsFull => Value >= MaxValue;
         public CorruptionTuning Tuning => _tuning;
@@ -29,7 +32,7 @@ namespace DontPushTheButton.Corruption
         /// <summary>值变化事件（HUD 监听刷新）。M2.6。</summary>
         public event Action OnChanged;
 
-        /// <summary>按超载键加腐败（GDD 4.3/4.4：超载键按即腐败，无论绑能力/移动）。</summary>
+        /// <summary>超载强化生效时由能力经 IAbilityContext.ChargeOverload 触发：加一次腐败（GDD 4.3/4.4；未生效不扣）。</summary>
         public void AddOverloadPress()
         {
             if (IsFull || _tuning == null) return;

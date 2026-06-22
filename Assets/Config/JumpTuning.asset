@@ -9,9 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6, type: 3}
-  m_Name: PushTuning
+  m_Script: {fileID: 11500000, guid: 6422a99e134b8bd80b6b3b48bf0d730a, type: 3}
+  m_Name: JumpTuning
   m_EditorClassIdentifier: 
-  _beamRange: 8
-  _beamPushDistance: 3
-  _cooldown: 0
+  _overloadJumpMultiplier: 1.4
+  _overloadFlyDuration: 0.45
+  _overloadFlyVelocity: 6
+  _fallGravityScale: 0.5

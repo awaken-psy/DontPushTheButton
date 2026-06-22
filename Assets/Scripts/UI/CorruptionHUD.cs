@@ -36,7 +36,9 @@ namespace DontPushTheButton.UI
             if (_barFill != null)
             {
                 _barFill.fillAmount = n;
-                _barFill.color = Color.Lerp(Color.green, Color.red, n); // 低绿→高红渐变
+                _barFill.color = (_colorGradient != null && _colorGradient.colorKeys.Length > 0)
+                    ? _colorGradient.Evaluate(n)
+                    : Color.Lerp(Color.green, Color.red, n); // 配了渐变用渐变，否则兜底绿→红
             }
             if (_countText != null)
                 _countText.text = "超载次数：" + _tracker.OverloadCount + " / 腐败 " + Mathf.RoundToInt(_tracker.Value) + "%";

@@ -80,3 +80,9 @@ Thumbs.db
 # 调试截图（MCP manage_camera 本地产物，不入库）
 /Assets/Screenshots/
 /Assets/Screenshots.meta
+
+# Unity 本地产物补漏（官方模板已知缺口）
+# VS/VSCode 运行时版本配置（.vs/ 只忽略目录，漏掉 .vsconfig 文件）
+*.vsconfig
+# Temp 目录的孤儿 .meta（[Tt]emp/ 规则只匹配目录，漏掉 Temp.meta 文件）
+Assets/Temp.meta
