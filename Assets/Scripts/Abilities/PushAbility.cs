@@ -42,6 +42,7 @@ namespace DontPushTheButton.Abilities
                 }
                 hit.transform.position += dir * dist;
                 _lastBeamTime = Time.time;
+                ctx.NotifyCast(Kind); // M3.10 动画驱动：确认命中并推动 → 触发 Push 动画
                 break;
             }
         }

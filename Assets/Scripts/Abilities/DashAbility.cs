@@ -54,6 +54,7 @@ namespace DontPushTheButton.Abilities
             Teleport(ctx, target);
             _lastDashTime = Time.time;
             if (overload) ctx.ChargeOverload(Kind); // 超载 dash×2 算 1 次腐败
+            ctx.NotifyCast(Kind); // M3.10 动画驱动：确认执行 → 触发 Dash 动画
         }
 
         private static void Teleport(IAbilityContext ctx, Vector3 pos)

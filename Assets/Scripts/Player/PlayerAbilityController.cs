@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -58,6 +59,15 @@ namespace DontPushTheButton.Player
         public LoadoutConfig Loadout => _loadout;
         public void AddHorizontal(Vector3 d) => _horizontalThisFrame += d;
         public void SetVerticalVelocity(float v) => _verticalVelocity = v;
+
+        /// <summary>垂直速度（M3.10 动画驱动：判上升/下落）。暴露给 PlayerAnimator 读。</summary>
+        public float VerticalVelocity => _verticalVelocity;
+
+        /// <summary>瞬时能力确认执行事件（M3.10 动画驱动：Dash/Pull/Push 触发动画 SetTrigger）。</summary>
+        public event Action<AbilityKind> OnInstantCast;
+
+        /// <summary>瞬时能力确认执行后由能力调用，raise OnInstantCast（M3.10）。</summary>
+        public void NotifyCast(AbilityKind kind) => OnInstantCast?.Invoke(kind);
 
         private static readonly Dictionary<MoveDirection, Vector2> DirVec = new Dictionary<MoveDirection, Vector2>
         {

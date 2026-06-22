@@ -27,6 +27,9 @@ namespace DontPushTheButton.Abilities
         private readonly List<Transform> _carried = new List<Transform>();
         private readonly List<Collider> _hitBuffer = new List<Collider>();
 
+        /// <summary>是否正在搬运物体（M3.10 动画驱动：Carrying 态）。</summary>
+        public bool IsCarrying => _state == CarryState.Carrying;
+
         public override void TickContinuous(IAbilityContext ctx)
         {
             if (_pickupTuning == null) return;

@@ -21,6 +21,8 @@ namespace DontPushTheButton.Abilities
         private FlyState _state = FlyState.Ground;
         private float _flyEndTime = -1f;
 
+        /// <summary>超载飞行中（M3.10 动画驱动：Flying 态）。</summary>
+        public bool IsFlying => _state == FlyState.Flying;
         /// <summary>缓落态（超载飞行结束后下落），PlayerAbilityController.ApplyGravity 据此减重力。</summary>
         public bool IsSlowFalling => _state == FlyState.SlowFall;
         public float FallGravityScale => _tuning != null ? _tuning.FallGravityScale : 1f;

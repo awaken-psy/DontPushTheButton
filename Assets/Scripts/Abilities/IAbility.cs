@@ -43,6 +43,9 @@ namespace DontPushTheButton.Abilities
 
         void AddHorizontal(Vector3 worldDisp);
         void SetVerticalVelocity(float v);
+
+        /// <summary>瞬时能力确认执行后回报（M3.10 动画驱动：统一瞬时事件出口，由 PlayerAbilityController raise OnInstantCast）。</summary>
+        void NotifyCast(AbilityKind kind);
     }
 
     /// <summary>

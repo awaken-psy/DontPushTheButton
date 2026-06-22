@@ -37,6 +37,7 @@ namespace DontPushTheButton.Abilities
                     land.y = ctx.Body.position.y; // 保持玩家 Y（俯视 2.5D 不改高度）
                     Teleport(ctx, land);
                     ctx.ChargeOverload(Kind); // 超载抓钩生效，扣一次腐败
+                    ctx.NotifyCast(Kind); // M3.10 动画驱动：确认执行 → 触发 Pull 动画
                     break;
                 }
             }
@@ -56,6 +57,7 @@ namespace DontPushTheButton.Abilities
                     Vector3 tgt = ctx.Body.position + fwd * _pullTuning.PullToDistance;
                     tgt.y = nearest.transform.position.y; // 保持物体 Y
                     nearest.transform.position = tgt;
+                    ctx.NotifyCast(Kind); // M3.10 动画驱动：确认拉到物体 → 触发 Pull 动画
                 }
             }
         }
