@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using DontPushTheButton.Config;
@@ -29,6 +30,9 @@ namespace DontPushTheButton.Abilities
 
         /// <summary>是否正在搬运物体（M3.10 动画驱动：Carrying 态）。</summary>
         public bool IsCarrying => _state == CarryState.Carrying;
+
+        /// <summary>搬运状态变化事件（M3.10 动画驱动）：true=捡起瞬间，false=放下瞬间。供动画切捡起/放下姿态。</summary>
+        public event Action<bool> OnCarryChanged;
 
         public override void TickContinuous(IAbilityContext ctx)
         {
@@ -67,6 +71,7 @@ namespace DontPushTheButton.Abilities
             _carried.Clear();
             for (int i = 0; i < count; i++) _carried.Add(_hitBuffer[i].transform);
             _state = CarryState.Carrying;
+            OnCarryChanged?.Invoke(true); // M3.10 动画驱动：捡起瞬间
 
             if (overload) ctx.ChargeOverload(Kind); // 超载搬多个，抓取成功扣一次腐败
         }
@@ -76,6 +81,7 @@ namespace DontPushTheButton.Abilities
         {
             _carried.Clear();
             _state = CarryState.Idle;
+            OnCarryChanged?.Invoke(false); // M3.10 动画驱动：放下瞬间
         }
 
         /// <summary>持有物体每帧吸附玩家前方 carryDistance，多个横向均匀分布。</summary>
