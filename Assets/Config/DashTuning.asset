@@ -9,9 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6, type: 3}
-  m_Name: PushTuning
+  m_Script: {fileID: 11500000, guid: 61ca6acd75f8f34e5a4047d227e3a195, type: 3}
+  m_Name: DashTuning
   m_EditorClassIdentifier: 
-  _beamRange: 8
-  _beamPushDistance: 3
-  _cooldown: 0
+  _dashDistance: 5
+  _cooldown: 0.5

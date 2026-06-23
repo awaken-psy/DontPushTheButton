@@ -29,4 +29,4 @@ MonoBehaviour:
     IsOverload: 1
   - KeyName: E
     IsOverload: 0
-  _availableAbilities: 0100000002000000
+  _availableAbilities: 0100000002000000030000000400000005000000

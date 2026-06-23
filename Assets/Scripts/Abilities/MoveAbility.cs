@@ -30,7 +30,11 @@ namespace DontPushTheButton.Abilities
             if (moveDir.sqrMagnitude > 1f) moveDir.Normalize();
 
             float speed = ctx.Tuning.MoveSpeed;
-            if (ctx.IsOverloadTrigger(AbilityKind.Move)) speed *= _overloadSpeedMultiplier;
+            if (ctx.IsOverloadTrigger(AbilityKind.Move))
+            {
+                speed *= _overloadSpeedMultiplier;
+                ctx.ChargeOverload(AbilityKind.Move); // 启动超载加速扣一次（按下帧消费，持续按住不重复扣）
+            }
             ctx.AddHorizontal(moveDir * (speed * Time.deltaTime));
 
             if (moveDir.sqrMagnitude > _moveInputThreshold)
