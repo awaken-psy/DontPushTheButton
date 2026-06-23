@@ -6,13 +6,13 @@ using DontPushTheButton.Player;
 namespace DontPushTheButton.Tests
 {
     /// <summary>
-    /// 动画驱动接口契约单测（M3.10）：
-    /// - 能力暴露的状态属性默认值正确（JumpAbility.IsFlying / PickupAbility.IsCarrying）；
-    /// - PlayerAbilityController.NotifyCast → OnInstantCast 路由正确（瞬时能力动画触发的事件源）。
-    /// Animator 参数实际 set 需 PlayMode + Controller 资产，属队友交付后验证，此处只验驱动逻辑。
+    /// 能力状态接口契约单测（M3.10）：这些状态供「代码控制 transform 的程序动画」读取（队友写）。
+    /// - JumpAbility.IsFlying / PickupAbility.IsCarrying 默认值正确；
+    /// - PlayerAbilityController.NotifyCast → OnInstantCast 路由正确（Dash/Pull/Push 触发瞬间事件源）。
+    /// 保接口契约不破——队友动画代码依赖这些信号。接口清单见 docs/design/动画系统.md。
     /// </summary>
     [TestFixture]
-    public class PlayerAnimatorContractTests
+    public class AbilityStateContractTests
     {
         private GameObject _go;
 
