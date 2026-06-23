@@ -38,8 +38,6 @@ namespace DontPushTheButton.Core
             DontDestroyOnLoad(gameObject);
         }
 
-        private void OnEnable() { }
-
         private void OnDisable()
         {
             if (_corruption != null) _corruption.OnCorruptionFull -= EnterFailed;
