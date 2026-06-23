@@ -2,29 +2,35 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using DontPushTheButton.Player;
 using DontPushTheButton.Corruption;
+using DontPushTheButton.Scoring;
 using DontPushTheButton.UI;
 
 namespace DontPushTheButton.Core
 {
     /// <summary>
-    /// 游戏全局管理器单例 + 关卡流程状态机（M2.8 收口，串联 M2.4-M2.7）。
-    /// 状态：Loadout(配置) ↔ Playing(关卡) → Won(过关) / Failed(腐败满格) / Paused(Esc 返回配置)。
-    /// 配置保留：LoadoutConfig 跨状态不清空。
-    /// 腐败清零策略（GDD 4.4 / H4）：满格重置=清零+保留配置；主动返回(Esc)=保留腐败（惩罚放弃）。
+    /// 游戏全局管理器单例 + 关卡流程状态机（M2.8 收口，M3.7 加评分/结算）。
+    /// 状态：Loadout(配置) ↔ Playing(关卡) → Won(过关结算) / Failed(腐败满格) / Paused(Esc)。
+    /// M3.7：EnterPlaying 记软计时起点；EnterWon 算 4 星 + 存 PlayerPrefs + 弹 ScorePopup，点继续才回 Loadout。
     /// </summary>
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
 
         public GameState CurrentState { get; private set; } = GameState.Boot;
+        /// <summary>本关开始时间（M3.7 软计时，TimerHUD 读）。EnterPlaying 时记录。</summary>
+        public float PlayStartTime => _playStartTime;
 
         [Header("模块引用")]
         [SerializeField] private GameObject _loadoutCanvas;        // 配置 UI（LoadoutUIController 根）
-        [SerializeField] private GameObject _corruptionHUD;       // 腐败 HUD
+        [SerializeField] private GameObject _corruptionHUD;       // 腐败 HUD（TimerHUD 挂其下）
         [SerializeField] private PlayerAbilityController _player;
         [SerializeField] private CorruptionTracker _corruption;
         [SerializeField] private LevelExit _levelExit;
         [SerializeField] private LoadoutUIController _loadoutUI;
+        [Tooltip("过关结算弹窗（M3.7）")]
+        [SerializeField] private ScorePopup _scorePopup;
+
+        private float _playStartTime; // M3.7 软计时：进 Playing 记录
 
         private void Awake()
         {
@@ -57,6 +63,7 @@ namespace DontPushTheButton.Core
             if (_player == null) _player = FindObjectOfType<PlayerAbilityController>();
             if (_corruption == null) _corruption = FindObjectOfType<CorruptionTracker>();
             if (_levelExit == null) _levelExit = FindObjectOfType<LevelExit>();
+            if (_scorePopup == null) _scorePopup = FindObjectOfType<ScorePopup>();
             // 订阅事件（引用就绪后）
             if (_corruption != null) _corruption.OnCorruptionFull += EnterFailed;
             if (_levelExit != null) _levelExit.OnReached.AddListener(EnterWon);
@@ -79,17 +86,53 @@ namespace DontPushTheButton.Core
         {
             if (_loadoutUI != null && _player != null)
                 _player.SetLoadout(_loadoutUI.Config); // 传玩家配置（保留）
-            SetUI(loadout: false, hud: true);
+            SetUI(loadout: false, hud: true, popup: false);
             if (_player != null) _player.enabled = true;
+            _playStartTime = Time.time; // M3.7 软计时起点
             CurrentState = GameState.Playing;
             Debug.Log("[GameManager] → Playing");
         }
 
-        /// <summary>过关（LevelExit 触发）。M2 单关：回配置重玩（结算/星级归 M3）。</summary>
+        /// <summary>过关（LevelExit 触发，M3.7）：算评分 + 存星级 + 弹结算窗，点继续才回配置。</summary>
         public void EnterWon()
         {
             CurrentState = GameState.LevelComplete;
-            Debug.Log("[GameManager] 过关！→ 回配置重玩（结算/评分归 M3）");
+            EvaluateAndShowScore();
+        }
+
+        /// <summary>M3.7：算 4 星 + 持久化 + 弹结算窗。</summary>
+        private void EvaluateAndShowScore()
+        {
+            float elapsed = Time.time - _playStartTime;
+            int overloadCount = _corruption != null ? _corruption.OverloadCount : 0;
+            int freeSlots = 0;
+            if (_loadoutUI != null && _loadoutUI.Config != null)
+                foreach (var s in _loadoutUI.Config.Slots)
+                    if (!s.Binding.HasValue) freeSlots++;
+            // 阈值（默认占位，LevelConfig 覆盖）
+            float timeSec = 30f; int overloadMax = 3; int freeMin = 1; string levelId = "Level";
+            if (_loadoutUI != null && _loadoutUI.LevelConfig != null)
+            {
+                var lc = _loadoutUI.LevelConfig;
+                timeSec = lc.ScoreTimeSec; overloadMax = lc.ScoreOverloadCount; freeMin = lc.ScoreFreeSlots;
+                levelId = lc.LevelId;
+            }
+            var r = ScoreCalculator.Compute(elapsed, overloadCount, freeSlots, timeSec, overloadMax, freeMin);
+
+            // 持久化（重玩取最高）
+            string key = $"dptb_stars_{levelId}";
+            int prev = PlayerPrefs.GetInt(key, 0);
+            if (r.Total > prev) { PlayerPrefs.SetInt(key, r.Total); PlayerPrefs.Save(); }
+
+            Debug.Log($"[GameManager] 过关！{r.Total}/4（通关/时间/节制/精简 = {r.Pass}/{r.Time}/{r.Moderation}/{r.Lean}）用时 {elapsed:F1}s 超载 {overloadCount} 空槽 {freeSlots}");
+            if (_scorePopup != null) _scorePopup.Show(r, elapsed, overloadCount, freeSlots);
+            SetUI(loadout: false, hud: false, popup: true);
+        }
+
+        /// <summary>结算窗「继续」按钮回调 → 回配置。</summary>
+        public void OnScorePopupContinue()
+        {
+            if (_scorePopup != null) _scorePopup.Hide();
             EnterLoadout();
         }
 
@@ -110,15 +153,16 @@ namespace DontPushTheButton.Core
 
         private void EnterLoadout()
         {
-            SetUI(loadout: true, hud: false);
+            SetUI(loadout: true, hud: false, popup: false);
             if (_player != null) _player.enabled = false; // 配置时禁用 Player
             CurrentState = GameState.Loadout;
         }
 
-        private void SetUI(bool loadout, bool hud)
+        private void SetUI(bool loadout, bool hud, bool popup)
         {
             if (_loadoutCanvas != null) _loadoutCanvas.SetActive(loadout);
             if (_corruptionHUD != null) _corruptionHUD.SetActive(hud);
+            if (!popup && _scorePopup != null && _scorePopup.gameObject.activeSelf) _scorePopup.Hide();
         }
 
         /// <summary>场景加载接口（M1 壳，保留）。</summary>

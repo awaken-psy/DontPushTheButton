@@ -43,6 +43,14 @@ namespace DontPushTheButton.Config
         [Tooltip("本关可绑定的能力（不含移动；移动方向 Up/Down/Left/Right 默认每关可用——GDD §A 移动=4槽是绑定项，非单键能力）")]
         [SerializeField] private List<AbilityKind> _availableAbilities = new List<AbilityKind>();
 
+        [Header("评分阈值（M3.7；R6 每关独立，占位值 playtest 调）")]
+        [Tooltip("时间星阈值（秒）：用时 ≤ 此值得时间星")]
+        [SerializeField] private float _scoreTimeSec = 30f;
+        [Tooltip("节制星阈值：超载次数 ≤ 此值得节制星")]
+        [SerializeField] private int _scoreOverloadCount = 3;
+        [Tooltip("精简星阈值：空闲槽位 ≥ 此值得精简星")]
+        [SerializeField] private int _scoreFreeSlots = 1;
+
         // ---- 只读访问（运行时/M2.4 配置 UI 读取）----
         public string LevelId => _levelId;
         public string DisplayName => _displayName;
@@ -50,5 +58,8 @@ namespace DontPushTheButton.Config
         public int SlotCount => _slotCount;
         public IReadOnlyList<KeySlotDef> AvailableKeys => _availableKeys;
         public IReadOnlyList<AbilityKind> AvailableAbilities => _availableAbilities;
+        public float ScoreTimeSec => _scoreTimeSec;
+        public int ScoreOverloadCount => _scoreOverloadCount;
+        public int ScoreFreeSlots => _scoreFreeSlots;
     }
 }
