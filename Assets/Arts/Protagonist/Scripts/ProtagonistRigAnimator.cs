@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DontPushTheButton.Abilities;
 using DontPushTheButton.Player;
+using UnityEngine.Animations;
 
 /// <summary>
 /// 主角动画器
@@ -31,6 +32,9 @@ public class ProtagonistRigAnimator : MonoBehaviour
     [Tooltip("轮胎转角")] float _wheelAngle;
     #endregion
     #region 动画表现参数
+    [Header("配置文件，以下具体参数不用手动填")]
+    [SerializeField] SO_ProtagonistAnimator _config;
+    [Space]
     [Header("移动")]
     [Tooltip("转向速度")][SerializeField] float _turnSpeed = 450;
     [Tooltip("转向死区")][SerializeField] float _turnThreshold = 0.1f;
@@ -50,16 +54,17 @@ public class ProtagonistRigAnimator : MonoBehaviour
     [Tooltip("引擎瞬时转速")][SerializeField] float _ventMaxSpeed = 1500;
     [Tooltip("引擎减速度")][SerializeField] float _ventDeaccelate = 500;
     #endregion
-    #region 测试
-    [Header("Test")]
-    public float SlantAngle;
-    #endregion
 
     private void Awake()
     {
         _controller = GetComponent<PlayerAbilityController>();
         _jump = GetComponent<JumpAbility>();
         _pick = GetComponent<PickupAbility>();
+
+        ConstraintSource source = new();
+        source.weight = 1;
+        source.sourceTransform = transform;
+        _rig.GetComponentInChildren<PositionConstraint>().AddSource(source);
     }
     private void Start()
     {
@@ -67,7 +72,18 @@ public class ProtagonistRigAnimator : MonoBehaviour
         _modelTrans.position = transform.position;
         _modelTrans.rotation = transform.rotation;
 
-
+        _turnSpeed = _config._turnSpeed;
+        _turnThreshold = _config._turnThreshold;
+        _turnDampingBorder = _config._turnDampingBorder;
+        _inertanceAccelerate = _config._inertanceAccelerate;
+        _inertanceThreshold = _config._inertanceThreshold;
+        _inertanceLimit = _config._inertanceLimit;
+        _rotateFactor = _config._rotateFactor;
+        _rotateLimit = _config._rotateLimit;
+        _screwDefaultSpeed = _config._screwDefaultSpeed;
+        _screwOverloadSpeed = _config._screwOverloadSpeed;
+        _ventMaxSpeed = _config._ventMaxSpeed;
+        _ventDeaccelate = _config._ventDeaccelate;
 
         //_lastDirect = _modelTrans.forward;
     }
@@ -116,7 +132,7 @@ public class ProtagonistRigAnimator : MonoBehaviour
     void Shake()
     {
         _rig.Body.OnLateUpdate(_inertanceAccelerate, _inertanceThreshold, _rotateFactor, _rotateLimit, _inertanceLimit);
-        _rig.Underpan.InertanceSlant(_controller.IsGrounded, SlantAngle);
+        _rig.Underpan.InertanceSlant(_controller.IsGrounded, _config.inertanceAccelerate, _config.inertanceThreshold, _config.inertanceLimit, _config.rotateFactor, _config.rotateLimit);
     }
     /// <summary>
     /// 触发重力枪动画
