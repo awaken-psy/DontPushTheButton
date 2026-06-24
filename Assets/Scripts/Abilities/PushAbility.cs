@@ -26,7 +26,7 @@ namespace DontPushTheButton.Abilities
         {
             if (_pushTuning == null) return;
             if (!ctx.WasPressedThisFrame(Kind)) return;
-            if (Time.time - _lastBeamTime < _pushTuning.Cooldown) return;
+            if (Time.time - _lastBeamTime < _pushTuning.Cooldown * ctx.CorruptionCooldownMultiplier) return; // M3.8：腐败层级3+ 延长冷却
 
             Vector3 origin = ctx.Body.position; origin.y = _beamHeight;
             Vector3 dir = ctx.Body.forward; dir.y = 0f; dir.Normalize();

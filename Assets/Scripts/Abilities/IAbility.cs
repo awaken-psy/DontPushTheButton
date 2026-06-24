@@ -46,6 +46,11 @@ namespace DontPushTheButton.Abilities
 
         /// <summary>瞬时能力确认执行后回报（M3.10 动画驱动：统一瞬时事件出口，由 PlayerAbilityController raise OnInstantCast）。</summary>
         void NotifyCast(AbilityKind kind);
+
+        /// <summary>腐败移速倍率（M3.8：层级2+ &lt;1 降速；否则 1）。转发 CorruptionEffects。</summary>
+        float CorruptionSpeedMultiplier { get; }
+        /// <summary>腐败冷却倍率（M3.8：层级3+ &gt;1 延长；否则 1）。转发 CorruptionEffects。</summary>
+        float CorruptionCooldownMultiplier { get; }
     }
 
     /// <summary>
