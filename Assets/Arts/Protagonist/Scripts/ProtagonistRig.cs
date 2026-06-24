@@ -10,11 +10,13 @@ using UnityEngine;
 /// </remarks>
 public class ProtagonistRig : MonoBehaviour
 {
+    [SerializeField] ProtagonistBody _body;
     [SerializeField] ProtagonistUnderpan _underpan;
     [SerializeField] ProtagonistAirscrew _airscrew;
     [SerializeField] ProtagonistEngine _engine;
     [SerializeField] ProtagonistGravityGun _gravityGun;
 
+    public ProtagonistBody Body => _body;
     public ProtagonistUnderpan Underpan => _underpan;
     public ProtagonistAirscrew Airscrew => _airscrew;
     public ProtagonistEngine Engine => _engine;

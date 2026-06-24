@@ -35,6 +35,10 @@ public class ProtagonistRigAnimator : MonoBehaviour
     [Tooltip("转向速度")][SerializeField] float _turnSpeed = 450;
     [Tooltip("转向死区")][SerializeField] float _turnThreshold = 0.1f;
     [Tooltip("转向衰减边界(角度)")][SerializeField] float _turnDampingBorder = 10;
+    [Header("惯性")]
+    [Tooltip("惯性增量")][SerializeField] float _inertanceAccelerate;
+    [Tooltip("惯性死区")][SerializeField] float _inertanceThreshold;
+    [Tooltip("旋转系数")][SerializeField] float _rotateFactor;
     [Header("螺旋桨")]
     [Tooltip("默认转速")][SerializeField] float _screwDefaultSpeed = 1000;
     [Tooltip("超载转速")][SerializeField] float _screwOverloadSpeed = 2000;
@@ -57,7 +61,7 @@ public class ProtagonistRigAnimator : MonoBehaviour
 
         //_lastDirect = _modelTrans.forward;
     }
-    private void FixedUpdate()
+    /*private void FixedUpdate()
     {
         #region Temp
         if (_pick.IsCarrying)
@@ -69,23 +73,47 @@ public class ProtagonistRigAnimator : MonoBehaviour
             _rig.GravityGun.SetActive(false);
         }
         #endregion
-    }
+    }*/
     private void LateUpdate()
     {
         Move();
         Fly();
         Dash();
+        Shake();
     }
 
     private void OnEnable()
     {
-        if (_controller != null) _controller.OnInstantCast += OnCast;
+        if (_controller != null)
+        {
+            _controller.OnInstantCast += OnCast;
+            _pick.OnCarryChanged += OnPickup;
+        }
     }
     private void OnDisable()
     {
-        if (_controller != null) _controller.OnInstantCast -= OnCast;
+        if (_controller != null)
+        {
+            _controller.OnInstantCast -= OnCast;
+            _pick.OnCarryChanged -= OnPickup;
+        }
     }
 
+    /// <summary>
+    /// 惯性摇摆
+    /// </summary>
+    void Shake()
+    {
+        _rig.Body.OnLateUpdate(_inertanceAccelerate, _inertanceThreshold, _rotateFactor);
+    }
+    /// <summary>
+    /// 触发重力枪动画
+    /// </summary>
+    /// <param name="isPickup"></param>
+    void OnPickup(bool isPickup)
+    {
+        _rig.GravityGun.SetActive(isPickup);
+    }
     /// <summary>
     /// 触发能力时调用
     /// </summary>
@@ -94,12 +122,12 @@ public class ProtagonistRigAnimator : MonoBehaviour
         switch (ability)
         {
             case AbilityKind.Move:
-                Debug.Log("Move");
+                //Debug.Log("Move");
                 break;
             case AbilityKind.Jump:
-                Debug.Log("Jump");
+                //Debug.Log("Jump");
                 break;
-            case AbilityKind.Pickup:
+            /*case AbilityKind.Pickup:
                 Debug.Log("Pickup");
                 if (_pick.IsCarrying)
                 {
@@ -109,16 +137,16 @@ public class ProtagonistRigAnimator : MonoBehaviour
                 {
                     _rig.GravityGun.SetActive(false);
                 }
-                break;
+                break;*/
             case AbilityKind.Pull:
-                Debug.Log("Pull");
+                //Debug.Log("Pull");
                 break;
             case AbilityKind.Dash:
-                Debug.Log("Dash");
+                //Debug.Log("Dash");
                 _ventSpeed = _ventMaxSpeed;
                 break;
             case AbilityKind.Push:
-                Debug.Log("Push");
+                //Debug.Log("Push");
                 break;
             default:
                 break;
