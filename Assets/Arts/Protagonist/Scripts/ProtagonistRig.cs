@@ -21,4 +21,15 @@ public class ProtagonistRig : MonoBehaviour
     public ProtagonistAirscrew Airscrew => _airscrew;
     public ProtagonistEngine Engine => _engine;
     public ProtagonistGravityGun GravityGun => _gravityGun;
+
+    float _speed;
+    public float Speed => _speed;
+    Vector3 _lastPosition;
+
+    public void UpdateSpeed()
+    {
+        _speed = transform.InverseTransformVector(transform.position - _lastPosition).z / Time.deltaTime;
+
+        _lastPosition = transform.position;
+    }
 }

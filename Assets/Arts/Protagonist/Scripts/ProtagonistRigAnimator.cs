@@ -35,16 +35,24 @@ public class ProtagonistRigAnimator : MonoBehaviour
     [Tooltip("转向速度")][SerializeField] float _turnSpeed = 450;
     [Tooltip("转向死区")][SerializeField] float _turnThreshold = 0.1f;
     [Tooltip("转向衰减边界(角度)")][SerializeField] float _turnDampingBorder = 10;
-    [Header("惯性")]
+    [Header("底盘惯性")]
+
+    [Header("天线惯性")]
     [Tooltip("惯性增量")][SerializeField] float _inertanceAccelerate;
     [Tooltip("惯性死区")][SerializeField] float _inertanceThreshold;
+    [Tooltip("惯性限制")][SerializeField] float _inertanceLimit;
     [Tooltip("旋转系数")][SerializeField] float _rotateFactor;
+    [Tooltip("旋转限制")][SerializeField] float _rotateLimit;
     [Header("螺旋桨")]
     [Tooltip("默认转速")][SerializeField] float _screwDefaultSpeed = 1000;
     [Tooltip("超载转速")][SerializeField] float _screwOverloadSpeed = 2000;
     [Header("推进器")]
     [Tooltip("引擎瞬时转速")][SerializeField] float _ventMaxSpeed = 1500;
     [Tooltip("引擎减速度")][SerializeField] float _ventDeaccelate = 500;
+    #endregion
+    #region 测试
+    [Header("Test")]
+    public float SlantAngle;
     #endregion
 
     private void Awake()
@@ -58,6 +66,8 @@ public class ProtagonistRigAnimator : MonoBehaviour
         _modelTrans = _rig.transform;
         _modelTrans.position = transform.position;
         _modelTrans.rotation = transform.rotation;
+
+
 
         //_lastDirect = _modelTrans.forward;
     }
@@ -76,6 +86,7 @@ public class ProtagonistRigAnimator : MonoBehaviour
     }*/
     private void LateUpdate()
     {
+        _rig.UpdateSpeed();
         Move();
         Fly();
         Dash();
@@ -104,7 +115,8 @@ public class ProtagonistRigAnimator : MonoBehaviour
     /// </summary>
     void Shake()
     {
-        _rig.Body.OnLateUpdate(_inertanceAccelerate, _inertanceThreshold, _rotateFactor);
+        _rig.Body.OnLateUpdate(_inertanceAccelerate, _inertanceThreshold, _rotateFactor, _rotateLimit, _inertanceLimit);
+        _rig.Underpan.InertanceSlant(_controller.IsGrounded, SlantAngle);
     }
     /// <summary>
     /// 触发重力枪动画

@@ -10,7 +10,9 @@ using UnityEngine;
 /// </remarks>
 public class InertanceShake : MonoBehaviour
 {
-    Vector3 lastPos;
+    ProtagonistRig rig;
+
+    //Vector3 lastPos;
     float speed;
     float inertance;
     //[Tooltip("惯性增量")][SerializeField] float inertanceAccelerate;
@@ -23,19 +25,22 @@ public class InertanceShake : MonoBehaviour
 
     private void Awake()
     {
-        lastPos = transform.position;
+        //lastPos = transform.position;
+        rig = GetComponentInParent<ProtagonistRig>();
     }
 
     /// <summary>
     /// 在<see langword="LateUpdate"/>中调用
     /// </summary>
-    public void CallOnLateUpdate(float inertanceAccelerate, float inertanceThreshold, float rotateFactor)
+    public void CallOnLateUpdate(float inertanceAccelerate, float inertanceThreshold, float rotateFactor, float rotateLimit, float inertanceLimit)
     {
         //speed ∈ [0, 0.05)
-        speed = -transform.InverseTransformVector((transform.position - lastPos) / Time.deltaTime).y;
+        //speed = -transform.InverseTransformVector((transform.position - lastPos) / Time.deltaTime).y;
+        speed = rig.Speed;
         //Debug.Log(speed);
 
         inertanceDelta = inertance - speed;
+        //Debug.Log($"惯性：{inertance:f3}，速度：{speed:f3}");
         if (Mathf.Abs(inertanceDelta) > inertanceThreshold)
         {
             if (inertanceDelta > 0)
@@ -48,26 +53,27 @@ public class InertanceShake : MonoBehaviour
                 inertance += inertanceAccelerate * Time.deltaTime;
                 rotateAngle = inertanceAccelerate * Time.deltaTime * rotateFactor;
             }
+            inertance = Mathf.Clamp(inertance, -inertanceLimit, inertanceLimit);
             angleBeforeRotated = angleRotated;
             angleRotated += rotateAngle;
-            angleRotated = Mathf.Clamp(angleRotated, -10, 10);
+            angleRotated = Mathf.Clamp(angleRotated, -rotateLimit, rotateLimit);
             transform.Rotate(Vector3.right, angleRotated - angleBeforeRotated);
-            Debug.Log($"惯性:{angleRotated}");
+            //Debug.Log($"惯性:{angleRotated}");
         }
 
         if (Mathf.Abs(speed) < inertanceThreshold)
         {
             if (Mathf.Abs(angleRotated) > 0.05f)
             {
-                rotateAngle = -inertanceAccelerate * Time.deltaTime * rotateFactor * angleRotated / 10;
+                rotateAngle = -inertanceAccelerate * Time.deltaTime * rotateFactor * angleRotated / rotateLimit;
                 angleBeforeRotated = angleRotated;
                 angleRotated += rotateAngle;
-                angleRotated = Mathf.Clamp(angleRotated, -10, 10);
+                angleRotated = Mathf.Clamp(angleRotated, -rotateLimit, rotateLimit);
                 transform.Rotate(Vector3.right, angleRotated - angleBeforeRotated);
-                Debug.Log($"回正:{angleRotated}");
+                //Debug.Log($"回正:{angleRotated}");
             }
         }
 
-        lastPos = transform.position;
+        //lastPos = transform.position;
     }
 }
