@@ -29,6 +29,7 @@ public class ProtagonistRig : MonoBehaviour
     public void UpdateSpeed()
     {
         _speed = transform.InverseTransformVector(transform.position - _lastPosition).z / Time.deltaTime;
+        //Debug.Log(_speed);
 
         _lastPosition = transform.position;
     }

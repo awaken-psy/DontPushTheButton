@@ -17,6 +17,7 @@ public class ProtagonistRigAnimator : MonoBehaviour
     [Header("组件")]
     [Tooltip("需传入主角预制体上的ProtagonistRig组件")]
     [SerializeField] ProtagonistRig _rig;
+    ProtagonistHitInfo _controllerHit;
     #endregion
     #region 控制器
     PlayerAbilityController _controller;
@@ -60,6 +61,7 @@ public class ProtagonistRigAnimator : MonoBehaviour
         _controller = GetComponent<PlayerAbilityController>();
         _jump = GetComponent<JumpAbility>();
         _pick = GetComponent<PickupAbility>();
+        _controllerHit = GetComponent<ProtagonistHitInfo>();
 
         ConstraintSource source = new();
         source.weight = 1;
@@ -87,19 +89,10 @@ public class ProtagonistRigAnimator : MonoBehaviour
 
         //_lastDirect = _modelTrans.forward;
     }
-    /*private void FixedUpdate()
+    private void FixedUpdate()
     {
-        #region Temp
-        if (_pick.IsCarrying)
-        {
-            _rig.GravityGun.SetActive(true);
-        }
-        else
-        {
-            _rig.GravityGun.SetActive(false);
-        }
-        #endregion
-    }*/
+        ClambSlope();
+    }
     private void LateUpdate()
     {
         _rig.UpdateSpeed();
@@ -127,12 +120,22 @@ public class ProtagonistRigAnimator : MonoBehaviour
     }
 
     /// <summary>
+    /// 爬坡
+    /// </summary>
+    void ClambSlope()
+    {
+        if (_controller.IsGrounded)
+        {
+            _rig.Underpan.UnderpanSlant(_controllerHit.Normal);
+        }
+    }
+    /// <summary>
     /// 惯性摇摆
     /// </summary>
     void Shake()
     {
         _rig.Body.OnLateUpdate(_inertanceAccelerate, _inertanceThreshold, _rotateFactor, _rotateLimit, _inertanceLimit);
-        _rig.Underpan.InertanceSlant(_controller.IsGrounded, _config.inertanceAccelerate, _config.inertanceThreshold, _config.inertanceLimit, _config.rotateFactor, _config.rotateLimit);
+        //_rig.Underpan.InertanceSlant(_controller.IsGrounded, _config.inertanceAccelerate, _config.inertanceThreshold, _config.inertanceLimit, _config.rotateFactor, _config.rotateLimit);
     }
     /// <summary>
     /// 触发重力枪动画

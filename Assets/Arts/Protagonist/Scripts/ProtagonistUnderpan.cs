@@ -22,7 +22,7 @@ public class ProtagonistUnderpan : MonoBehaviour
     [Tooltip("倾斜中心到悬挂起点距离")][SerializeField] float[] l;
     [Tooltip("悬挂长度")][SerializeField] float[] l_s;
     [Tooltip("悬挂旋转阈值")][SerializeField] float _suspendThreshold = 0.01f;
-    [Tooltip("悬挂初始姿态")] Quaternion[] _suspendDefault;
+    //[Tooltip("悬挂初始姿态")] Quaternion[] _suspendDefault;
     float deltaY;
     [Tooltip("上帧悬挂夹角")] float[] _lastSuspendAngles = new float[2];
     [Tooltip("当前悬挂夹角")] float[] _suspendAngles = new float[2];
@@ -46,6 +46,16 @@ public class ProtagonistUnderpan : MonoBehaviour
     //悬挂应旋转的角度β与车体倾斜角度α的关系为：
     //β = arccos((Δy sinα - cosα √(l_s^2 - Δy^2))/l_s) - β_0
     //其中Δy = r_w -h + l sinα
+    [Header("底盘适应地形")]
+    //[Tooltip("前后高低差阈值")][SerializeField] float columnDropThreshold;
+    //[Tooltip("轮胎碰撞")][SerializeField] WheelColliderEvent[] wheelColliders;
+    //[Tooltip("法线差死区")][SerializeField] float normalDeltaThreshold;
+    //[Tooltip("横向")] Vector3 rowDirect;
+    //[Tooltip("纵向")] Vector3 columnDirect;
+    //[Tooltip("前后高低差")] float columnDrop;
+    [Tooltip("旋转速度")]
+    [SerializeField] float adaptSpeed;
+    [Tooltip("目标朝向")] Quaternion targetDirect;
 
     private void Awake()
     {
@@ -61,6 +71,31 @@ public class ProtagonistUnderpan : MonoBehaviour
         _lastSuspendAngles[1] = beta_1 * Mathf.Rad2Deg;
     }
 
+    /// <summary>
+    /// 根据地形倾斜底盘
+    /// </summary>
+    public void UnderpanSlant(Vector3 normal)
+    {
+        //Debug.DrawRay(transform.position, normal, Color.red);
+        //transform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(Quaternion.AngleAxis(90, transform.right) * normal, transform.parent.right), normal);
+        //Debug.DrawRay(transform.position, Quaternion.AngleAxis(90, transform.right) * normal, Color.yellow);
+
+        targetDirect = Quaternion.LookRotation(Vector3.ProjectOnPlane(Quaternion.AngleAxis(90, transform.right) * normal, transform.parent.right), normal);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetDirect, adaptSpeed);
+
+        //return;
+        /*//高低差
+        columnDrop = Mathf.Abs(_leftWheels[0].localPosition.z + _rightWheels[0].localPosition.z - _leftWheels[2].localPosition.z - _rightWheels[2].localPosition.z);
+        //Debug.Log(columnDrop);
+        if (columnDrop < columnDropThreshold) return;*/
+        //法线对比
+        //if (!((Vector3.Dot(wheelColliders[0].Normal, wheelColliders[2].Normal) > normalDeltaThreshold && Vector3.Dot(wheelColliders[1].Normal, wheelColliders[3].Normal) > normalDeltaThreshold) || (Vector3.Dot(wheelColliders[0].Normal, wheelColliders[1].Normal) > normalDeltaThreshold && Vector3.Dot(wheelColliders[2].Normal, wheelColliders[3].Normal) > normalDeltaThreshold))) return;
+        //平面法线
+        //rowDirect = _rightWheels[2].position - _leftWheels[2].position;
+        //columnDirect = _leftWheels[0].position - _leftWheels[2].position;
+        //transform.rotation = Quaternion.LookRotation(columnDirect, Vector3.Cross(columnDirect, rowDirect));
+        //Debug.DrawRay(transform.position, Vector3.Cross(Vector3.ProjectOnPlane(columnDirect, transform.parent.right), rowDirect), Color.red);
+    }
     /// <summary>
     /// 惯性倾斜
     /// </summary>
@@ -87,7 +122,7 @@ public class ProtagonistUnderpan : MonoBehaviour
                 angleBeforeRotated = angleRotated;
                 angleRotated += rotateAngle;
                 angleRotated = Mathf.Clamp(angleRotated, -rotateLimit, rotateLimit);
-                transform.Rotate(Vector3.right, -(angleRotated - angleBeforeRotated));
+                _underpan.Rotate(Vector3.right, angleRotated - angleBeforeRotated);
                 //Debug.Log($"惯性:{angleRotated}");
             }
             if (Mathf.Abs(rig.Speed - lastSpeed) < inertanceThreshold)
@@ -98,7 +133,7 @@ public class ProtagonistUnderpan : MonoBehaviour
                     angleBeforeRotated = angleRotated;
                     angleRotated += rotateAngle;
                     angleRotated = Mathf.Clamp(angleRotated, -rotateLimit, rotateLimit);
-                    transform.Rotate(Vector3.right, -(angleRotated - angleBeforeRotated));
+                    _underpan.Rotate(Vector3.right, angleRotated - angleBeforeRotated);
                     //Debug.Log($"回正:{angleRotated}");
                 }
             }
@@ -168,58 +203,6 @@ public class ProtagonistUnderpan : MonoBehaviour
         }
 
         _suspendAngles.CopyTo(_lastSuspendAngles, 0);
-
-        //_underpan.Rotate(Vector3.right, -alpha);
-        //_underpanAngle += alpha;
-        //alpha *= -Mathf.Deg2Rad;
-        ////---------前轮
-        //if (_underpanAngle > 0)
-        //{
-        //    deltaY = r_w - h + l[0] * Mathf.Sin(alpha);
-        //    _suspendAngle = (Mathf.Acos((deltaY * Mathf.Sin(alpha) - Mathf.Cos(alpha) * Mathf.Sqrt(l_s[0] * l_s[0] - deltaY * deltaY)) / l_s[0]) - beta_0) * Mathf.Rad2Deg;
-        //    if (_suspendAngle > _suspendThreshold)
-        //    {
-        //        _suspendAngle *= (_underpanAngle > _lastUnderpanAngle ? 1 : -1);
-        //        foreach (var suspend in _suspendsFront)
-        //        {
-        //            suspend.Rotate(Vector3.right, _suspendAngle);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        _suspendsFront[0].localRotation = _suspendDefault[0];
-        //        _suspendsFront[1].localRotation = _suspendDefault[1];
-
-        //        //_suspendsFront[0].localRotation = Quaternion.RotateTowards(_suspendsFront[0].localRotation, _suspendDefault[0], _suspendAngle);
-        //        //_suspendsFront[1].localRotation = Quaternion.RotateTowards(_suspendsFront[1].localRotation, _suspendDefault[1], _suspendAngle);
-        //    }
-        //}
-        ////---------后轮
-        //if (_underpanAngle < 0)
-        //{
-
-        //}
-        //alpha *= -1;
-        //deltaY = r_w - h + l[1] * Mathf.Sin(alpha);
-        //_suspendAngle = (Mathf.Acos((deltaY * Mathf.Sin(alpha) - Mathf.Cos(alpha) * Mathf.Sqrt(l_s[1] * l_s[1] - deltaY * deltaY)) / l_s[1]) - beta_1) * Mathf.Rad2Deg;
-        //if (_suspendAngle > _suspendThreshold)
-        //{
-        //    foreach (var suspend in _suspendsBack)
-        //    {
-        //        suspend.Rotate(Vector3.right, -_suspendAngle);
-        //    }
-        //}
-        //else
-        //{
-        //    //_suspendsBack[0].localRotation = _suspendDefault[2];
-        //    //_suspendsBack[1].localRotation = _suspendDefault[3];
-
-        //    _suspendsBack[0].localRotation = Quaternion.RotateTowards(_suspendsBack[0].localRotation, _suspendDefault[2], _suspendAngle);
-        //    _suspendsBack[1].localRotation = Quaternion.RotateTowards(_suspendsBack[1].localRotation, _suspendDefault[3], _suspendAngle);
-
-        //}
-        ////------------
-        //_lastUnderpanAngle = _underpanAngle;
     }
     /// <summary>
     /// 旋转左侧轮胎
