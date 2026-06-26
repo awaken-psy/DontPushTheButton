@@ -124,10 +124,7 @@ public class ProtagonistRigAnimator : MonoBehaviour
     /// </summary>
     void ClambSlope()
     {
-        if (_controller.IsGrounded)
-        {
-            _rig.Underpan.UnderpanSlant(_controllerHit.Normal);
-        }
+        _rig.Underpan.UnderpanSlant(_controllerHit.Normal, _controller.IsGrounded);
     }
     /// <summary>
     /// 惯性摇摆

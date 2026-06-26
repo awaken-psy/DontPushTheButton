@@ -105,13 +105,14 @@ public class ProtagonistUnderpan : MonoBehaviour
     /// <summary>
     /// 根据地形倾斜底盘
     /// </summary>
-    public void UnderpanSlant(Vector3 normal)
+    public void UnderpanSlant(Vector3 normal, bool isOnGround)
     {
         //Debug.DrawRay(transform.position, normal, Color.red);
         //transform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(Quaternion.AngleAxis(90, transform.right) * normal, transform.parent.right), normal);
         //Debug.DrawRay(transform.position, Quaternion.AngleAxis(90, transform.right) * normal, Color.yellow);
 
         if (normal.y < 0) return;
+        if (!isOnGround) normal = Vector3.up;
         targetDirect = Quaternion.LookRotation(Vector3.ProjectOnPlane(Quaternion.AngleAxis(90, transform.right) * normal, transform.parent.right), normal);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetDirect, adaptSpeed);
 
