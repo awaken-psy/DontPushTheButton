@@ -1,18 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Animations;
 
 /// <summary>
 /// 控制底盘动画
 /// </summary>
 public class ProtagonistUnderpan : MonoBehaviour
 {
-    [Header("底盘")]
+    [Header("底盘")]///------------
     [SerializeField] Transform _underpan;
-    [Header("轮子，从前至后")]
+    [Header("轮子，从前至后")]///------------
     [SerializeField] Transform[] _leftWheels;
     [SerializeField] Transform[] _rightWheels;
-    [Header("悬挂")]
+    [Header("悬挂")]///------------
     [Tooltip("前轮")][SerializeField] Transform[] _suspendsFront;
     [Tooltip("后轮")][SerializeField] Transform[] _suspendsBack;
     [Tooltip("初始夹角β_0（弧度）")][SerializeField] float beta_0;
@@ -27,9 +28,12 @@ public class ProtagonistUnderpan : MonoBehaviour
     [Tooltip("上帧悬挂夹角")] float[] _lastSuspendAngles = new float[2];
     [Tooltip("当前悬挂夹角")] float[] _suspendAngles = new float[2];
     [Tooltip("该帧悬挂需旋转的角度°")] float _suspendAngle;
+    [Header("车轮适应地形")]///------------
+    [Tooltip("车轮跟随")] PositionConstraint[] _positionConstraints;
+    [Tooltip("悬挂系统")][SerializeField] GameObject _physics;
     //[Tooltip("车体倾斜角度")] float _underpanAngle;
     //float _lastUnderpanAngle;
-    [Header("惯性")]
+    [Header("惯性")]///-------------
     //[Tooltip("惯性增量")][SerializeField] float inertanceAccelerate;
     //[Tooltip("惯性死区")][SerializeField] float inertanceThreshold;
     //[Tooltip("惯性限制")][SerializeField] float inertanceLimit;
@@ -46,15 +50,14 @@ public class ProtagonistUnderpan : MonoBehaviour
     //悬挂应旋转的角度β与车体倾斜角度α的关系为：
     //β = arccos((Δy sinα - cosα √(l_s^2 - Δy^2))/l_s) - β_0
     //其中Δy = r_w -h + l sinα
-    [Header("底盘适应地形")]
+    [Header("底盘适应地形")]///------------
     //[Tooltip("前后高低差阈值")][SerializeField] float columnDropThreshold;
     //[Tooltip("轮胎碰撞")][SerializeField] WheelColliderEvent[] wheelColliders;
     //[Tooltip("法线差死区")][SerializeField] float normalDeltaThreshold;
     //[Tooltip("横向")] Vector3 rowDirect;
     //[Tooltip("纵向")] Vector3 columnDirect;
     //[Tooltip("前后高低差")] float columnDrop;
-    [Tooltip("旋转速度")]
-    [SerializeField] float adaptSpeed;
+    [Tooltip("旋转速度")][SerializeField] float adaptSpeed;
     [Tooltip("目标朝向")] Quaternion targetDirect;
 
     private void Awake()
@@ -72,6 +75,34 @@ public class ProtagonistUnderpan : MonoBehaviour
     }
 
     /// <summary>
+    /// 是否激活悬挂？
+    /// </summary>
+    /// <param name="active"></param>
+    public void ActiveSuspend(bool active)
+    {
+        if (_positionConstraints == null)
+        {
+            _positionConstraints = new PositionConstraint[6];
+            for (int i = 0; i < 6; i++)
+            {
+                if (i < 3)
+                {
+                    _positionConstraints[i] = _leftWheels[i].GetComponent<PositionConstraint>();
+                }
+                else
+                {
+                    _positionConstraints[i] = _rightWheels[i - 3].GetComponent<PositionConstraint>();
+                }
+            }
+        }
+
+        _physics.SetActive(active);
+        foreach (var constraint in _positionConstraints)
+        {
+            constraint.enabled = active;
+        }
+    }
+    /// <summary>
     /// 根据地形倾斜底盘
     /// </summary>
     public void UnderpanSlant(Vector3 normal)
@@ -80,6 +111,7 @@ public class ProtagonistUnderpan : MonoBehaviour
         //transform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(Quaternion.AngleAxis(90, transform.right) * normal, transform.parent.right), normal);
         //Debug.DrawRay(transform.position, Quaternion.AngleAxis(90, transform.right) * normal, Color.yellow);
 
+        if (normal.y < 0) return;
         targetDirect = Quaternion.LookRotation(Vector3.ProjectOnPlane(Quaternion.AngleAxis(90, transform.right) * normal, transform.parent.right), normal);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetDirect, adaptSpeed);
 
@@ -226,4 +258,17 @@ public class ProtagonistUnderpan : MonoBehaviour
             t.Rotate(Vector3.up, -angle);
         }
     }
+
+    #region Test
+    [ContextMenu("激活悬挂")]
+    void OnSuspend()
+    {
+        ActiveSuspend(true);
+    }
+    [ContextMenu("关闭悬挂")]
+    void OffSuspend()
+    {
+        ActiveSuspend(false);
+    }
+    #endregion
 }
