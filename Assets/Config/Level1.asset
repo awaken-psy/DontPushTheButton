@@ -26,10 +26,10 @@ MonoBehaviour:
   - KeyName: D
     IsOverload: 0
   - KeyName: Space
-    IsOverload: 1
+    IsOverload: 0
   - KeyName: E
     IsOverload: 0
-  _availableAbilities: 
+  _availableAbilities: 0100000005000000
   _scoreTimeSec: 60
   _scoreOverloadCount: 99
   _scoreFreeSlots: 0
