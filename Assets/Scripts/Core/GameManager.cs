@@ -67,7 +67,9 @@ namespace DontPushTheButton.Core
             // 订阅事件（引用就绪后）
             if (_corruption != null) _corruption.OnCorruptionFull += EnterFailed;
             if (_levelExit != null) _levelExit.OnReached.AddListener(EnterWon);
-            EnterLoadout(); // 初始进配置阶段
+            // M3.11.5：教学关（场景无 LoadoutUI）跳过配置直接 Playing；PlayerAbilityController.Start 用 _levelConfig 自建默认 WASD Loadout
+            if (_loadoutUI == null) EnterPlaying();
+            else EnterLoadout(); // 初始进配置阶段
         }
 
         private void Update()
