@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec9911930606ac446a18c5f5b8121521, type: 3}
+  m_Name: Protagonist Animator
+  m_EditorClassIdentifier: 
+  _turnSpeed: 450
+  _turnThreshold: 0.1
+  _turnDampingBorder: 10
+  inertanceAccelerate: 0.1
+  inertanceThreshold: 0.001
+  inertanceLimit: 0.035
+  rotateFactor: 500
+  rotateLimit: 8
+  _inertanceAccelerate: 0.1
+  _inertanceThreshold: 0.001
+  _inertanceLimit: 0.05
+  _rotateFactor: 500
+  _rotateLimit: 10
+  _screwDefaultSpeed: 1000
+  _screwOverloadSpeed: 2000
+  _ventMaxSpeed: 500
+  _ventDeaccelate: 350
