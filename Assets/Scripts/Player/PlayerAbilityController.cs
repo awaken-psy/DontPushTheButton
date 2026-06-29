@@ -28,6 +28,7 @@ namespace DontPushTheButton.Player
         [SerializeField] private CorruptionTracker _corruption;
 
         private CharacterController _controller;
+        private CorruptionEffects _corruptionEffects; // M3.8：腐败视效/机制系数
         private JumpAbility _jump; // M3.5：缓落需读 IsSlowFalling 调重力
         private readonly List<AbilityBase> _abilities = new List<AbilityBase>();
         private float _verticalVelocity;
@@ -69,6 +70,11 @@ namespace DontPushTheButton.Player
         /// <summary>瞬时能力确认执行后由能力调用，raise OnInstantCast（M3.10）。</summary>
         public void NotifyCast(AbilityKind kind) => OnInstantCast?.Invoke(kind);
 
+        /// <summary>腐败移速倍率（M3.8）：转发 CorruptionEffects（无则 1）。</summary>
+        public float CorruptionSpeedMultiplier => _corruptionEffects != null ? _corruptionEffects.MoveSpeedMultiplier : 1f;
+        /// <summary>腐败冷却倍率（M3.8）：转发 CorruptionEffects（无则 1）。</summary>
+        public float CorruptionCooldownMultiplier => _corruptionEffects != null ? _corruptionEffects.CooldownMultiplier : 1f;
+
         private static readonly Dictionary<MoveDirection, Vector2> DirVec = new Dictionary<MoveDirection, Vector2>
         {
             { MoveDirection.Up, Vector2.up }, { MoveDirection.Down, Vector2.down },
@@ -83,6 +89,7 @@ namespace DontPushTheButton.Player
             if (_tuning == null) Debug.LogError("[PlayerAbilityController] MovementTuning 未赋值", this);
             if (_relativeCamera == null) _relativeCamera = Camera.main;
             if (_corruption == null) _corruption = GetComponent<CorruptionTracker>();
+            _corruptionEffects = GetComponent<CorruptionEffects>(); // M3.8
         }
 
         private void Start()

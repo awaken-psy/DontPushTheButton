@@ -25,7 +25,7 @@ namespace DontPushTheButton.Abilities
         {
             if (_dashTuning == null) return;
             if (!ctx.WasPressedThisFrame(Kind)) return;
-            if (Time.time - _lastDashTime < _dashTuning.Cooldown) return;
+            if (Time.time - _lastDashTime < _dashTuning.Cooldown * ctx.CorruptionCooldownMultiplier) return; // M3.8：腐败层级3+ 延长冷却
 
             // 方向：角色当前正前方（Body.forward）；需有移动输入才触发（无输入不 dash）
             if (ctx.MoveInput.sqrMagnitude < 0.01f) return;
