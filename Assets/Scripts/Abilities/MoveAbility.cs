@@ -35,6 +35,7 @@ namespace DontPushTheButton.Abilities
                 speed *= _overloadSpeedMultiplier;
                 ctx.ChargeOverload(AbilityKind.Move); // 启动超载加速扣一次（按下帧消费，持续按住不重复扣）
             }
+            speed *= ctx.CorruptionSpeedMultiplier; // M3.8：腐败层级2+ 降速
             ctx.AddHorizontal(moveDir * (speed * Time.deltaTime));
 
             if (moveDir.sqrMagnitude > _moveInputThreshold)
