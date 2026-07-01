@@ -1,30 +1,25 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using DontPushTheButton.Config;
 
 namespace DontPushTheButton.Corruption
 {
     /// <summary>
     /// 腐败视效 + 机制层（M3.8，GDD 4.4）。挂 Player，订阅 CorruptionTracker.OnChanged。
-    /// 按 Normalized 算层级（L0-L4）→ 调 URP Volume（泛红/glitch）+ 抖相机 + 暴露移速/冷却系数给能力读。
-    /// L5（满格）由 CorruptionTracker.OnCorruptionFull → GameManager.EnterFailed 处理，本组件不管。
+    /// M4.4：参数全 SO 化（_tuning），层级阈值/惩罚/视效/抖动从 CorruptionTuning 读（留空用默认）。
+    /// L5（满格）由 CorruptionTracker.OnCorruptionFull → GameManager.EnterFailed 处理。
     /// </summary>
     public class CorruptionEffects : MonoBehaviour
     {
         [Header("引用")]
         [SerializeField] private CorruptionTracker _tracker;
-        [Tooltip("腐败视效 Volume（全局，含 Vignette + ColorAdjustments override）")]
+        [Tooltip("腐败视效 Volume（含 Vignette + ColorAdjustments override）")]
         [SerializeField] private Volume _volume;
-        [Tooltip("抖动用 CinemachineImpulseSource（留空则不抖；用 MonoBehaviour 避免硬依赖 CM 类型）")]
+        [Tooltip("抖动用 CinemachineImpulseSource（留空则不抖；M4.4 接）")]
         [SerializeField] private MonoBehaviour _impulseSource;
-
-        [Header("层级系数（占位，playtest 调）")]
-        [Tooltip("层级2+ 移速倍率（<1 = 降速）")]
-        [SerializeField] private float _level2SpeedMult = 0.85f;
-        [Tooltip("层级3+ 冷却倍率（>1 = 延长）")]
-        [SerializeField] private float _level3CooldownMult = 1.3f;
-        [Tooltip("层级4 满泛红强度")]
-        [SerializeField] private float _vignetteMaxIntensity = 0.6f;
+        [Tooltip("M4.4：参数 SO（层级阈值/惩罚/视效/抖动）。留空用代码默认值。")]
+        [SerializeField] private CorruptionTuning _tuning;
 
         private Vignette _vignette;
         private ColorAdjustments _colorAdj;
@@ -32,10 +27,10 @@ namespace DontPushTheButton.Corruption
 
         /// <summary>当前腐败层级（0–4）。</summary>
         public int Level => _level;
-        /// <summary>移速倍率（L2+ 返回 _level2SpeedMult；否则 1）。MoveAbility 读。</summary>
-        public float MoveSpeedMultiplier => _level >= 2 ? _level2SpeedMult : 1f;
-        /// <summary>冷却倍率（L3+ 返回 _level3CooldownMult；否则 1）。Dash/Push 读。</summary>
-        public float CooldownMultiplier => _level >= 3 ? _level3CooldownMult : 1f;
+        /// <summary>移速倍率（L2+ 返回降速；否则 1）。MoveAbility 读。</summary>
+        public float MoveSpeedMultiplier => _level >= 2 ? (_tuning != null ? _tuning.Level2SpeedMult : 0.85f) : 1f;
+        /// <summary>冷却倍率（L3+ 返回延长；否则 1）。Dash/Push 读。</summary>
+        public float CooldownMultiplier => _level >= 3 ? (_tuning != null ? _tuning.Level3CooldownMult : 1.3f) : 1f;
 
         private void OnEnable()
         {
@@ -49,27 +44,47 @@ namespace DontPushTheButton.Corruption
             if (_tracker != null) _tracker.OnChanged -= Refresh;
         }
 
-        /// <summary>按 Normalized 算层级 + 应用视效。</summary>
         private void Refresh()
         {
             if (_tracker == null) return;
-            _level = ComputeLevel(_tracker.Normalized);
+            _level = (_tuning != null)
+                ? ComputeLevel(_tracker.Normalized, _tuning)
+                : ComputeLevel(_tracker.Normalized);
             ApplyVisuals();
         }
 
-        /// <summary>纯函数层级算法（供单测）：Normalized → L0–L4。</summary>
+        /// <summary>纯函数层级算法（默认阈值，供单测 + _tuning 留空时 fallback）。</summary>
         public static int ComputeLevel(float normalized)
         {
             if (normalized < 0.25f) return 0;
             if (normalized < 0.5f) return 1;
             if (normalized < 0.75f) return 2;
             if (normalized < 0.95f) return 3;
-            return 4; // 0.95–1.0；1.0 满格由 EnterFailed 处理
+            return 4;
+        }
+
+        /// <summary>纯函数层级算法（SO 阈值，M4.4）。</summary>
+        public static int ComputeLevel(float normalized, CorruptionTuning t)
+        {
+            if (t == null) return ComputeLevel(normalized);
+            if (normalized < t.Level1Threshold) return 0;
+            if (normalized < t.Level2Threshold) return 1;
+            if (normalized < t.Level3Threshold) return 2;
+            if (normalized < t.Level4Threshold) return 3;
+            return 4;
         }
 
         private void ApplyVisuals()
         {
             float t = Mathf.Clamp01(_level / 4f); // L0:0 → L4:1
+
+            float vigMax = _tuning != null ? _tuning.VignetteMaxIntensity : 0.6f;
+            Color vigColor = _tuning != null ? _tuning.VignetteColor : new Color(0.8f, 0.1f, 0.1f);
+            float l1PostExp = _tuning != null ? _tuning.Level1PostExposure : 0.15f;
+            float hueShift = _tuning != null ? _tuning.ColorAdjHueShift : -30f;
+            float sat = _tuning != null ? _tuning.ColorAdjSaturation : -30f;
+            float impulseL3 = _tuning != null ? _tuning.Level3ImpulseForce : 0.5f;
+            float impulseL4 = _tuning != null ? _tuning.Level4ImpulseForce : 1.0f;
 
             // Volume 权重
             if (_volume != null) _volume.weight = t;
@@ -77,22 +92,26 @@ namespace DontPushTheButton.Corruption
             // Vignette（红，强度随层级）
             if (_vignette != null)
             {
-                _vignette.intensity.Override(t * _vignetteMaxIntensity);
-                _vignette.color.Override(new Color(0.8f, 0.1f, 0.1f));
+                _vignette.intensity.Override(t * vigMax);
+                _vignette.color.Override(vigColor);
             }
 
-            // ColorAdjustments（L3+ glitch 感：色相偏移 + 降饱和）
+            // ColorAdjustments：L1 差异化（postExposure 轻微亮）+ L3+ glitch（hueShift/sat）
             if (_colorAdj != null)
             {
+                // L1 信号：轻微 postExposure（M4.4 D，避免 L1 几乎无感）
+                float l1Signal = (_level == 1) ? l1PostExp : 0f;
+                _colorAdj.postExposure.Override(l1Signal);
+                // L3+ glitch
                 float glitch = Mathf.Max(0, _level - 2) / 2f; // L3:0.5, L4:1
-                _colorAdj.hueShift.Override(-30f * glitch);
-                _colorAdj.saturation.Override(-30f * glitch);
+                _colorAdj.hueShift.Override(hueShift * glitch);
+                _colorAdj.saturation.Override(sat * glitch);
             }
 
             // 抖动（L3+，反射调 CinemachineImpulseSource.GenerateImpulseWithForce）
             if (_level >= 3 && _impulseSource != null)
             {
-                float force = _level >= 4 ? 1f : 0.5f;
+                float force = _level >= 4 ? impulseL4 : impulseL3;
                 var mi = _impulseSource.GetType().GetMethod("GenerateImpulseWithForce");
                 if (mi != null) mi.Invoke(_impulseSource, new object[] { force });
             }
