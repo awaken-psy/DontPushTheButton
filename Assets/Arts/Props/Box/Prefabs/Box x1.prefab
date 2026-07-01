@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4722547577316299851}
   - component: {fileID: 2673082751533944691}
+  - component: {fileID: 4245675735641951213}
   m_Layer: 0
   m_Name: Box x1
   m_TagString: Pushable
@@ -54,6 +55,33 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0.525, z: 0}
+--- !u!54 &4245675735641951213
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2957808074696801091}
+  serializedVersion: 4
+  m_Mass: 10
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &4343643011485054077
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -112,6 +140,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 9f49943c03ee4d94ea8d6543e316aecb,
+        type: 3}
+      propertyPath: m_Materials.Array.data[2]
+      value: 
+      objectReference: {fileID: 2100000, guid: 6c0033cecb33d4e45ab793674bfafac3, type: 2}
     - target: {fileID: 919132149155446097, guid: 9f49943c03ee4d94ea8d6543e316aecb,
         type: 3}
       propertyPath: m_Name
