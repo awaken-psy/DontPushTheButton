@@ -31,6 +31,7 @@ namespace DontPushTheButton.Core
         [SerializeField] private ScorePopup _scorePopup;
 
         private float _playStartTime; // M3.7 软计时：进 Playing 记录
+        private bool _returnToLoadoutAfterScore = true; // M4.2：结算继续→true=回Loadout(通关)/false=回Playing(检查点)
 
         private void Awake()
         {
@@ -98,9 +99,21 @@ namespace DontPushTheButton.Core
         /// <summary>过关（LevelExit 触发，M3.7）：算评分 + 存星级 + 弹结算窗，点继续才回配置。</summary>
         public void EnterWon()
         {
+            _returnToLoadoutAfterScore = true; // 通关结算→继续回配置
             CurrentState = GameState.LevelComplete;
             EvaluateAndShowScore();
         }
+
+        /// <summary>M4.2：检查点段结算——弹 ScorePopup（该段评分），继续回 Playing（关卡连续，不回配置）。</summary>
+        public void CheckpointReached()
+        {
+            _returnToLoadoutAfterScore = false; // 检查点结算→继续回 Playing
+            CurrentState = GameState.LevelComplete;
+            EvaluateAndShowScore();
+        }
+
+        /// <summary>M4.2：检查点按 E 重绑——进配置阶段（保留腐败），重绑后「开始关卡」回 Playing。</summary>
+        public void EnterLoadoutForRebind() => EnterLoadout();
 
         /// <summary>M3.7：算 4 星 + 持久化 + 弹结算窗。</summary>
         private void EvaluateAndShowScore()
@@ -131,11 +144,22 @@ namespace DontPushTheButton.Core
             SetUI(loadout: false, hud: false, popup: true);
         }
 
-        /// <summary>结算窗「继续」按钮回调 → 回配置。</summary>
+        /// <summary>结算窗「继续」按钮回调 → 通关回配置 / 检查点段结算回 Playing（M4.2）。</summary>
         public void OnScorePopupContinue()
         {
             if (_scorePopup != null) _scorePopup.Hide();
-            EnterLoadout();
+            if (_returnToLoadoutAfterScore)
+            {
+                EnterLoadout(); // 通关结算→回配置
+            }
+            else
+            {
+                // 检查点段结算→回 Playing 继续玩（关卡连续）
+                SetUI(loadout: false, hud: true, popup: false);
+                if (_player != null) _player.enabled = true;
+                CurrentState = GameState.Playing;
+                _returnToLoadoutAfterScore = true; // 复位
+            }
         }
 
         /// <summary>腐败满格（CorruptionTracker.OnCorruptionFull）：清零 + 保留配置 → 回配置。</summary>

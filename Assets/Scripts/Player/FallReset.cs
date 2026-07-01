@@ -34,5 +34,12 @@ namespace DontPushTheButton.Player
                 Debug.Log("[FallReset] 掉沟，回起点（M2.7 简单重置；M2.8 接正式失败重置）");
             }
         }
+
+        /// <summary>M4.2：检查点更新出生点（CheckPoint 碰触发调，幂等）。</summary>
+        public void SetRespawn(Vector3 pos, Vector3 euler)
+        {
+            _respawnPos = pos;
+            _respawnEuler = euler;
+        }
     }
 }
