@@ -9,6 +9,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: MT_Ground
     second: {fileID: 2100000, guid: ca118591cb1c1c047b7919645b5df840, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MT_River
+    second: {fileID: 2100000, guid: a225aa036479df24dbe28ca01c00d79c, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
