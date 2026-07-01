@@ -87,11 +87,11 @@ Material:
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
-    - _BubbleClamp: 1.71
-    - _BubbleRange: 1
-    - _BubbleSize: 0.96
-    - _BubbleThreshold: 1.8
-    - _BubbleTransport: 0.38
+    - _BubbleClamp: 2.12
+    - _BubbleRange: 0.59
+    - _BubbleSize: -0.79
+    - _BubbleThreshold: 2.26
+    - _BubbleTransport: 0.47
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
@@ -103,11 +103,11 @@ Material:
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
     - _Frequence: 1
-    - _GT: 0.53
+    - _GT: -0.29
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Intensity: 1
+    - _Intensity: 0.48
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Offset: -1.01
@@ -115,6 +115,7 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _Rotate: -45
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
