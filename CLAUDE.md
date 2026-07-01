@@ -34,14 +34,14 @@
 详细任务：docs/milestones/M3.md
 
 ### M4: 打磨与深度（打磨层）（当前）
-目标：全 5 关 playtest 调参 + 数值精调 + 腐败层级微调 + 3D 配置预览 + 关卡选择界面 + 结局。
-性质：**打磨 Could**（时间允许才做；**4.4 playtest 最优先**）
+目标：完整性检查 → 能力手感/腐败系统/数值精调优化 → 3D 配置预览 + 结局 → 全 5 关 playtest 验证核心乐趣。
+性质：**打磨 Could**（时间允许才做；**4.1 完整性检查最优先**）
 前置：M3 完成 ✅
 详细任务：docs/milestones/M4.md
 
 ### 跨里程碑约束
 - 所有新系统先「能跑」（构建验证 + 编辑器试玩通过）才可标记完成，不允许无测试记录的 `[x]`
 - 数值全部走 ScriptableObject 集中配置，便于 GDD 调优
-- **scope 兜底（v0.7 决策）**：按优先级增量交付——M2（核心循环）必须独立可玩；M3/M4 按时间推进，超时则外层先砍（视效/机关反转/关卡选择），保核心乐趣验证不落空。详见 `docs/toConfirm.md §J`
+- **scope 兜底（v0.7 决策）**：按优先级增量交付——M2（核心循环）必须独立可玩；M3/M4 按时间推进，超时则外层先砍（视效/3D 预览/随机化），保核心乐趣验证不落空。详见 `docs/toConfirm.md §J`
 - GDD 改动需同步回顾本文件的技术栈/约束是否要调整
 - **验证手段**：已接入 **MCP for Unity**（CoplayDev/unity-mcp，开源；区别于商业 Coplay MCP）。Unity 编辑器交互式打开 + MCP 面板 session active 时，Claude 经 `UnityMCP`（`http://127.0.0.1:9090/mcp`，local scope 不进 git）可直接操作 Unity：`read_console`/`find_gameobjects`/`manage_scene`/`manage_packages`/`run_tests` 等。无头编译验证仍用 Unity `-batchmode`。**两者互补**：MCP 需 Unity 开着（端口 9090，因 8080 被 SRS 占），batchmode 可无人值守
